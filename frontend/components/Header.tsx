@@ -77,19 +77,6 @@ export default function Header() {
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></span>
               )}
             </Link>
-            <Link 
-              href="/admin" 
-              className={`text-sm font-black uppercase tracking-wide py-2 px-3 rounded-lg transition-all duration-300 relative ${
-                isActive('/admin') 
-                  ? 'text-white' 
-                  : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              Admin
-              {isActive('/admin') && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></span>
-              )}
-            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -145,17 +132,6 @@ export default function Header() {
               }`}
             >
               Contact
-            </Link>
-            <Link
-              href="/admin"
-              onClick={closeMenu}
-              className={`py-3 px-4 rounded-lg font-black uppercase tracking-wide text-sm transition-all duration-300 ${
-                isActive('/admin')
-                  ? 'bg-white text-black'
-                  : 'text-gray-300 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              Admin
             </Link>
           </nav>
         </div>

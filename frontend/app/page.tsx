@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -5,6 +6,17 @@ import LocationMap from '@/components/LocationMap';
 import ScrollDownArrow from '@/components/ScrollDownArrow';
 import OffersPreview from '@/components/OffersPreview';
 import { Wrench, Settings, Car, Droplet, ArrowRight, CheckCircle, Sparkles } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Garage de la Belle Croix - Entretien et Réparation Automobile à Ennery',
+  description: 'Garage automobile à Ennery près de Metz-Thionville. Entretien, réparation, pneus, vidange. Devis gratuits. Contactez-nous au 0609369490.',
+  keywords: 'garage automobile Ennery, entretien voiture Metz, réparation auto Thionville, pneus, vidange, garage de confiance',
+  openGraph: {
+    title: 'Garage de la Belle Croix - Entretien et Réparation Automobile',
+    description: 'Votre garage de confiance pour l\'entretien et la réparation automobile à Ennery',
+    type: 'website',
+  },
+};
 
 export default async function Home() {
 
