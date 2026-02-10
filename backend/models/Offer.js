@@ -57,3 +57,5 @@ offerSchema.pre('save', function(next) {
 
 export default mongoose.model('Offer', offerSchema);
 
+
+

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LocationMap from '@/components/LocationMap';
@@ -59,7 +60,7 @@ export default async function Home() {
             </h1>
             
             <p className="text-base md:text-lg text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed font-light">
-              Entretien, réparation, pneus, vidange... Nous prenons soin de votre véhicule avec expertise et professionnalisme.
+              Votre partenaire de confiance pour l'entretien et la réparation automobile. Expertise, qualité et service personnalisé.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -69,12 +70,6 @@ export default async function Home() {
               >
                 Découvrir nos offres
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-              </Link>
-              <Link 
-                href="/contact"
-                className="group border-3 border-white text-white px-10 py-5 font-black text-xl rounded-xl hover:bg-white hover:text-black transition-all duration-300 flex items-center justify-center gap-3 backdrop-blur-md bg-white/10 shadow-xl hover:shadow-2xl"
-              >
-                Nous contacter
               </Link>
             </div>
           </div>
@@ -185,6 +180,41 @@ export default async function Home() {
               <p className="text-sm text-gray-300 leading-relaxed">
                 Intervention rapide et respect des délais
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Partnership Section */}
+      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-2">
+                Partenariat
+              </p>
+              <h3 className="text-lg text-gray-700 font-medium">
+                Partenaire officiel
+              </h3>
+            </div>
+            <div className="flex items-center justify-center">
+              <a
+                href="https://gbmotors.lu"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative inline-block transition-all duration-300 hover:scale-105"
+              >
+                <div className="bg-white rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group-hover:border-gray-200">
+                  <Image
+                    src="/gb_motors.png"
+                    alt="GB Motors"
+                    width={220}
+                    height={90}
+                    className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                  />
+                </div>
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/0 to-transparent group-hover:from-white/10 group-hover:via-white/5 group-hover:to-transparent transition-all duration-300"></div>
+              </a>
             </div>
           </div>
         </div>

@@ -51,6 +51,8 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
+Le frontend démarre sur le port **3000** par défaut.
+
 ## Configuration
 
 ### Backend (.env)
@@ -62,6 +64,8 @@ npm run dev
 
 ### Frontend (.env.local)
 - `NEXT_PUBLIC_API_URL`: URL de l'API backend
+
+**Note**: Le frontend utilise le port **3000** par défaut.
 
 ## Utilisation
 

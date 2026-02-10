@@ -22,3 +22,5 @@ const categoryOrderSchema = new mongoose.Schema({
 
 export default mongoose.model('CategoryOrder', categoryOrderSchema);
 
+
+

@@ -33,7 +33,22 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Liste des origines autorisées
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://garagebellecroix.fr',
+      'https://www.garagebellecroix.fr',
+      process.env.FRONTEND_URL
+    ].filter(Boolean); // Retire les valeurs undefined
+    
+    // En développement, autoriser les requêtes sans origine (Postman, etc.)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());

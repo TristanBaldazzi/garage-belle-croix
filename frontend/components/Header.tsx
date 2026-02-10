@@ -66,15 +66,15 @@ export default function Header() {
             </Link>
             <Link 
               href="/contact" 
-              className={`text-sm font-black uppercase tracking-wide py-2 px-3 rounded-lg transition-all duration-300 relative ${
+              className={`text-sm font-black uppercase tracking-wide py-2 px-3 rounded-lg transition-all duration-300 relative bg-white text-black hover:bg-gray-100 ${
                 isActive('/contact') 
-                  ? 'text-white' 
-                  : 'text-gray-300 hover:text-white'
+                  ? 'bg-white text-black' 
+                  : ''
               }`}
             >
-              Contact
+              CONTACT
               {isActive('/contact') && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></span>
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-black"></span>
               )}
             </Link>
           </nav>
@@ -125,13 +125,13 @@ export default function Header() {
             <Link
               href="/contact"
               onClick={closeMenu}
-              className={`py-3 px-4 rounded-lg font-black uppercase tracking-wide text-sm transition-all duration-300 ${
+              className={`py-3 px-4 rounded-lg font-black uppercase tracking-wide text-sm transition-all duration-300 bg-white text-black hover:bg-gray-100 ${
                 isActive('/contact')
                   ? 'bg-white text-black'
-                  : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                  : ''
               }`}
             >
-              Contact
+              CONTACT
             </Link>
           </nav>
         </div>

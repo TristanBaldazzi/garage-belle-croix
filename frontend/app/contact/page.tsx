@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { contactsAPI, quotesAPI, offersAPI } from '@/lib/api';
@@ -20,7 +20,7 @@ interface ContactForm {
   message: string;
 }
 
-export default function ContactPage() {
+function ContactFormContent() {
   const searchParams = useSearchParams();
   const offerId = searchParams.get('offer');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -315,5 +315,21 @@ export default function ContactPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="large" />
+        </div>
+        <Footer />
+      </div>
+    }>
+      <ContactFormContent />
+    </Suspense>
   );
 }

@@ -51,3 +51,5 @@ openingHoursSchema.statics.getOrCreate = async function() {
 
 export default mongoose.model('OpeningHours', openingHoursSchema);
 
+
+

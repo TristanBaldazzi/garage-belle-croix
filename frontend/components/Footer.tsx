@@ -13,8 +13,19 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>
             <h3 className="text-2xl font-black mb-6">GARAGE DE LA BELLE CROIX</h3>
-            <p className="text-gray-300 text-lg leading-relaxed">
+            <p className="text-gray-300 text-lg leading-relaxed mb-4">
               Votre partenaire de confiance pour l'entretien et la réparation de votre véhicule.
+            </p>
+            <p className="text-sm text-gray-400">
+              Fait par{' '}
+              <a
+                href="https://makemydesign.fr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-300 hover:text-white underline underline-offset-2 transition-colors duration-200"
+              >
+                Make My Design
+              </a>
             </p>
           </div>
           <div>
