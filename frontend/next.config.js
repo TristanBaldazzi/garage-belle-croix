@@ -15,6 +15,21 @@ const nextConfig = {
         port: '5001',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'garagebellecroix.fr',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.garagebellecroix.fr',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.garagebellecroix.fr',
+        pathname: '/uploads/**',
+      },
     ],
   },
 }

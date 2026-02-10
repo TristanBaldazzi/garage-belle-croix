@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { offersAPI } from '@/lib/api';
+import { offersAPI, getOfferImageUrl } from '@/lib/api';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ArrowRight, TrendingDown, Sparkles } from 'lucide-react';
 
@@ -66,7 +66,7 @@ export default function OffersPreview() {
                   {offer.image && (
                     <div className="relative w-full h-40 bg-gray-200">
                       <Image
-                        src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${offer.image}`}
+                        src={getOfferImageUrl(offer.image)}
                         alt={offer.title}
                         fill
                         className="object-cover"

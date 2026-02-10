@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { offersAPI } from '@/lib/api';
+import { offersAPI, getOfferImageUrl } from '@/lib/api';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -179,7 +179,7 @@ export default function OffresPage() {
                           <div className="relative w-full md:w-48 h-40 md:h-auto flex-shrink-0">
                             {offer.image ? (
                               <Image
-                                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${offer.image}`}
+                                src={getOfferImageUrl(offer.image)}
                                 alt={offer.title}
                                 fill
                                 className="object-cover"

@@ -2,6 +2,25 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+/**
+ * Construit l'URL absolue d'une image d'offre (uploads).
+ * Le backend sert toujours /uploads à la racine du serveur (pas sous /api).
+ */
+export function getOfferImageUrl(imagePath: string | undefined): string {
+  if (!imagePath) return '';
+  const path = imagePath.startsWith('/') ? imagePath : '/' + imagePath;
+  let apiUrl = (process.env.NEXT_PUBLIC_API_URL || API_URL).replace(/\/$/, '');
+  if (apiUrl.includes('://.garagebellecroix.fr')) {
+    apiUrl = 'https://www.garagebellecroix.fr/api';
+  }
+  const base = apiUrl.replace(/\/api\/?$/, '');
+  let url = base + path;
+  if (url.includes('://.garagebellecroix.fr')) {
+    url = url.replace(/:\/\/\.garagebellecroix\.fr/, '://www.garagebellecroix.fr');
+  }
+  return url;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,

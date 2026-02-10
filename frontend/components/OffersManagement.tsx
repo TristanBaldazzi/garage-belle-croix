@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { offersAPI } from '@/lib/api';
+import { offersAPI, getOfferImageUrl } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { Plus, Edit, Trash2, X, Save, Package, Image as ImageIcon, Upload, ChevronDown, Check, Minus } from 'lucide-react';
@@ -137,7 +137,7 @@ export default function OffersManagement() {
     setValue('originalPrice', offer.originalPrice || 0);
     setValue('category', offer.category);
     setValue('isActive', offer.isActive);
-    setImagePreview(offer.image ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${offer.image}` : null);
+    setImagePreview(offer.image ? getOfferImageUrl(offer.image) : null);
     setSelectedImage(null);
     setIsCategoryOpen(false);
     setShowForm(true);
