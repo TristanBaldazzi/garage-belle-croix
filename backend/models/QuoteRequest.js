@@ -18,9 +18,31 @@ const quoteRequestSchema = new mongoose.Schema({
   },
   licensePlate: {
     type: String,
-    required: true,
     trim: true,
     uppercase: true
+  },
+  // Prestation demandée (devis libre, hors offre)
+  service: {
+    type: String,
+    trim: true
+  },
+  vehicleType: {
+    type: String,
+    enum: ['voiture', 'moto'],
+    default: 'voiture'
+  },
+  vehicle: {
+    type: String,
+    trim: true
+  },
+  tireSize: {
+    type: String,
+    trim: true
+  },
+  tireQuantity: {
+    type: Number,
+    min: 1,
+    max: 8
   },
   message: {
     type: String,
@@ -28,12 +50,10 @@ const quoteRequestSchema = new mongoose.Schema({
   },
   offerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Offer',
-    required: true
+    ref: 'Offer'
   },
   offerTitle: {
-    type: String,
-    required: true
+    type: String
   },
   isRead: {
     type: Boolean,

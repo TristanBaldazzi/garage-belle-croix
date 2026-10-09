@@ -151,6 +151,34 @@ export const quotesAPI = {
   },
 };
 
+// Appointments API
+export const appointmentsAPI = {
+  create: async (data: any) => {
+    const response = await api.post('/appointments', data);
+    return response.data;
+  },
+  getAll: async (params?: { isArchived?: boolean; isRead?: boolean; status?: string }) => {
+    const response = await api.get('/appointments', { params });
+    return response.data;
+  },
+  markAsRead: async (id: string) => {
+    const response = await api.patch(`/appointments/${id}/read`);
+    return response.data;
+  },
+  updateStatus: async (id: string, status: 'en_attente' | 'confirme' | 'annule') => {
+    const response = await api.patch(`/appointments/${id}/status`, { status });
+    return response.data;
+  },
+  archive: async (id: string) => {
+    const response = await api.patch(`/appointments/${id}/archive`);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/appointments/${id}`);
+    return response.data;
+  },
+};
+
 // Opening Hours API
 export const openingHoursAPI = {
   get: async () => {

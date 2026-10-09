@@ -1,140 +1,113 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Wrench, Menu, X } from 'lucide-react';
+import { Menu, X, Phone, ArrowRight } from 'lucide-react';
+import Logo from '@/components/Logo';
+import { SITE } from '@/lib/site';
+
+const NAV_LINKS = [
+  { href: '/', label: 'Accueil' },
+  { href: '/#presentation', label: 'Présentation' },
+  { href: '/offres', label: 'Offres' },
+  { href: '/contact', label: 'Contact' },
+];
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const closeMenu = () => setIsMenuOpen(false);
+  const isActive = (path: string) => pathname === path;
 
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
-
-  const isActive = (path: string) => {
-    return pathname === path;
-  };
+  // Bloque le défilement de la page quand le menu mobile est ouvert
+  useEffect(() => {
+    document.body.style.overflow = isMenuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
 
   return (
-    <header className="bg-black text-white sticky top-0 z-50 shadow-2xl border-b-2 border-gray-800">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="bg-white p-2.5 rounded-xl group-hover:bg-gray-200 transition-all duration-300 shadow-lg group-hover:scale-110 transform">
-              <Wrench className="w-8 h-8 text-black" />
-            </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-black tracking-tight">GARAGE DE LA BELLE CROIX</h1>
-              <p className="text-xs md:text-sm text-gray-300 font-semibold">Votre garage de confiance</p>
-            </div>
-          </Link>
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-ink text-white">
+      <div className="container-site flex h-[68px] items-center justify-between gap-6 lg:h-[84px]">
+        <Logo onClick={closeMenu} />
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link 
-              href="/" 
-              className={`text-sm font-black uppercase tracking-wide py-2 px-3 rounded-lg transition-all duration-300 relative ${
-                isActive('/') 
-                  ? 'text-white' 
-                  : 'text-gray-300 hover:text-white'
+        <nav className="hidden h-full items-center gap-10 lg:flex">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`caps relative flex h-full items-center transition-colors ${
+                isActive(link.href) ? 'text-white' : 'text-white/55 hover:text-white'
               }`}
             >
-              Accueil
-              {isActive('/') && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></span>
-              )}
+              {link.label}
+              {isActive(link.href) && <span className="absolute inset-x-0 bottom-[26px] h-[2px] bg-brand" />}
             </Link>
-            <Link 
-              href="/offres" 
-              className={`text-sm font-black uppercase tracking-wide py-2 px-3 rounded-lg transition-all duration-300 relative ${
-                isActive('/offres') 
-                  ? 'text-white' 
-                  : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              Nos Offres
-              {isActive('/offres') && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white"></span>
-              )}
-            </Link>
-            <Link 
-              href="/contact" 
-              className={`text-sm font-black uppercase tracking-wide py-2 px-3 rounded-lg transition-all duration-300 relative bg-white text-black hover:bg-gray-100 ${
-                isActive('/contact') 
-                  ? 'bg-white text-black' 
-                  : ''
-              }`}
-            >
-              CONTACT
-              {isActive('/contact') && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-black"></span>
-              )}
-            </Link>
-          </nav>
+          ))}
+        </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={toggleMenu}
-            className="md:hidden bg-white/10 hover:bg-white/20 p-2 rounded-lg transition-all duration-300"
-            aria-label="Toggle menu"
+        <a href={SITE.phoneHref} className="btn-accent hidden h-11 px-6 lg:inline-flex">
+          <Phone className="h-4 w-4" strokeWidth={2.25} />
+          {SITE.phone}
+        </a>
+
+        <div className="flex items-center gap-2 lg:hidden">
+          <a
+            href={SITE.phoneHref}
+            className="btn-accent h-11 w-12 px-0"
+            aria-label={`Appeler le garage au ${SITE.phone}`}
           >
-            {isMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            <Phone className="h-[18px] w-[18px]" strokeWidth={2} />
+          </a>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="flex h-11 w-11 items-center justify-center border border-white/20 transition-colors hover:border-white/50"
+            aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={isMenuOpen}
+          >
+            {isMenuOpen ? <X className="h-5 w-5" strokeWidth={1.75} /> : <Menu className="h-5 w-5" strokeWidth={1.75} />}
           </button>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-            isMenuOpen ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <nav className="flex flex-col gap-2 pb-4 border-t border-gray-800 pt-4">
+      {/* Menu mobile plein écran */}
+      <div
+        className={`fixed inset-x-0 bottom-0 top-[68px] overflow-y-auto bg-ink bg-hatch transition-opacity duration-200 lg:hidden ${
+          isMenuOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      >
+        <nav className="container-site flex min-h-full flex-col py-8">
+          {NAV_LINKS.map((link, index) => (
             <Link
-              href="/"
+              key={link.href}
+              href={link.href}
               onClick={closeMenu}
-              className={`py-3 px-4 rounded-lg font-black uppercase tracking-wide text-sm transition-all duration-300 ${
-                isActive('/')
-                  ? 'bg-white text-black'
-                  : 'text-gray-300 hover:bg-white/10 hover:text-white'
-              }`}
+              className="group flex items-center justify-between border-b border-white/10 py-5"
             >
-              Accueil
+              <span className="flex items-baseline gap-4">
+                <span className="heading text-outline text-2xl text-brand">{String(index + 1).padStart(2, '0')}</span>
+                <span className={`heading text-[34px] ${isActive(link.href) ? 'text-brand' : 'text-white'}`}>{link.label}</span>
+              </span>
+              <ArrowRight className="h-5 w-5 text-white/40" strokeWidth={1.75} />
             </Link>
-            <Link
-              href="/offres"
-              onClick={closeMenu}
-              className={`py-3 px-4 rounded-lg font-black uppercase tracking-wide text-sm transition-all duration-300 ${
-                isActive('/offres')
-                  ? 'bg-white text-black'
-                  : 'text-gray-300 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              Nos Offres
+          ))}
+          <div className="mt-10 grid grid-cols-1 gap-4">
+            <Link href="/rendez-vous" onClick={closeMenu} className="btn-accent">
+              Prendre rendez-vous
             </Link>
-            <Link
-              href="/contact"
-              onClick={closeMenu}
-              className={`py-3 px-4 rounded-lg font-black uppercase tracking-wide text-sm transition-all duration-300 bg-white text-black hover:bg-gray-100 ${
-                isActive('/contact')
-                  ? 'bg-white text-black'
-                  : ''
-              }`}
-            >
-              CONTACT
+            <Link href="/devis" onClick={closeMenu} className="btn-outline-light">
+              Demander un devis
             </Link>
-          </nav>
-        </div>
+          </div>
+          <div className="mt-auto pt-10">
+            <span className="caps text-white/50">Appel direct</span>
+            <a href={SITE.phoneHref} className="heading mt-2 block text-4xl">{SITE.phone}</a>
+            <a href={SITE.phone2Href} className="heading mt-1 block text-2xl text-white/55">{SITE.phone2}</a>
+          </div>
+        </nav>
       </div>
     </header>
   );

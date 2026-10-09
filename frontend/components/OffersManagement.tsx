@@ -19,6 +19,7 @@ interface Offer {
   isActive: boolean;
   category: string;
   image?: string;
+  validUntil?: string | null;
   createdAt: string;
 }
 
@@ -31,6 +32,7 @@ interface OfferForm {
   isActive: boolean;
   image?: string;
   oldImage?: string;
+  validUntil?: string;
 }
 
 export default function OffersManagement() {
@@ -104,7 +106,8 @@ export default function OffersManagement() {
 
       const offerData = {
         ...data,
-        image: imageUrl
+        image: imageUrl,
+        validUntil: data.validUntil || null
       };
 
       if (editingOffer) {
@@ -137,6 +140,7 @@ export default function OffersManagement() {
     setValue('originalPrice', offer.originalPrice || 0);
     setValue('category', offer.category);
     setValue('isActive', offer.isActive);
+    setValue('validUntil', offer.validUntil ? offer.validUntil.slice(0, 10) : '');
     setImagePreview(offer.image ? getOfferImageUrl(offer.image) : null);
     setSelectedImage(null);
     setIsCategoryOpen(false);
@@ -376,6 +380,16 @@ export default function OffersManagement() {
                   </label>
                 </div>
               </div>
+            </div>
+
+            <div className="max-w-xs">
+              <label className="block text-sm font-bold mb-2">Valable jusqu'au</label>
+              <input
+                type="date"
+                {...register('validUntil')}
+                className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
+              />
+              <p className="text-xs text-gray-500 mt-1">Optionnel : l'offre disparaît du site après cette date</p>
             </div>
 
             <div className="flex gap-4 pt-4">

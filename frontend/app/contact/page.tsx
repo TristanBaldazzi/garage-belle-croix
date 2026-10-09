@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { contactsAPI, quotesAPI, offersAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { ArrowRight } from 'lucide-react';
+import { contactsAPI, quotesAPI, offersAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Send, Phone, Mail, MapPin, Clock, Tag } from 'lucide-react';
-import { useOpeningHours } from '@/lib/useOpeningHours';
+import RequestPageShell from '@/components/RequestPageShell';
+import { formatPrice } from '@/components/OfferCard';
+import { Field, FormStep, HoneypotField, PrivacyNote, SuccessPanel, inputClass } from '@/components/forms/FormParts';
 
 interface ContactForm {
   name: string;
@@ -18,17 +21,17 @@ interface ContactForm {
   subject?: string;
   licensePlate?: string;
   message: string;
+  website?: string;
 }
 
 function ContactFormContent() {
   const searchParams = useSearchParams();
   const offerId = searchParams.get('offer');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSent, setIsSent] = useState(false);
   const [offer, setOffer] = useState<any>(null);
   const [isLoadingOffer, setIsLoadingOffer] = useState(false);
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<ContactForm>();
-  const { getGroupedHours, isLoading: isLoadingHours } = useOpeningHours();
-  const groupedHours = getGroupedHours();
 
   useEffect(() => {
     if (offerId) {
@@ -59,14 +62,15 @@ function ContactFormContent() {
           phone: data.phone,
           licensePlate: data.licensePlate!,
           message: data.message,
-          offerId: offerId
+          offerId: offerId,
+          website: data.website
         });
-        toast.success('Votre demande de devis a été envoyée avec succès !');
       } else {
         await contactsAPI.create(data);
-        toast.success('Votre message a été envoyé avec succès !');
       }
       reset();
+      setIsSent(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Erreur lors de l\'envoi');
     } finally {
@@ -74,256 +78,160 @@ function ContactFormContent() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-white">
-      <Header />
+  const offerBadge = offerId && (
+    <div className="mt-8">
+      {isLoadingOffer ? (
+        <LoadingSpinner size="small" showText={false} />
+      ) : offer && (
+        <div className="inline-flex flex-wrap items-center gap-x-5 gap-y-2 border border-white/15 bg-white/5 px-5 py-3">
+          <span className="caps text-white/50">Offre</span>
+          <span className="heading text-2xl">{offer.title}</span>
+          <span className="btn-accent heading pointer-events-none h-auto px-4 py-1 text-xl tracking-normal">
+            {offer.price === 0 ? 'Offert' : formatPrice(offer.price)}
+          </span>
+        </div>
+      )}
+    </div>
+  );
 
-      {/* Page Header */}
-      <section className="bg-gradient-to-br from-black via-gray-900 to-black text-white py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              {offerId ? 'Demande de devis' : 'Contactez-nous'}
-            </h1>
-            <p className="text-xl text-gray-300">
-              {offerId 
-                ? 'Remplissez le formulaire pour obtenir un devis personnalisé'
-                : 'Une question ? Un devis ? N\'hésitez pas à nous contacter'
-              }
-            </p>
-            {isLoadingOffer ? (
-              <div className="mt-6 flex justify-center">
-                <LoadingSpinner size="medium" showText={false} />
+  return (
+    <RequestPageShell
+      eyebrow={offerId ? 'Demande de devis' : 'Contact'}
+      title={offerId ? 'J’en profite,' : 'Une question ?'}
+      accent={offerId ? 'on vous rappelle.' : 'On vous répond.'}
+      image={offerId ? '/images/offre-vidange.jpg' : '/images/atelier-pont.jpg'}
+      subtitle={offerId
+        ? 'Remplissez le formulaire, nous revenons vers vous rapidement avec un devis personnalisé.'
+        : 'Une question sur une prestation ou un tarif ? Écrivez-nous ou appelez directement le garage.'}
+      headerExtra={offerBadge}
+      alternate="rendez-vous"
+    >
+      {isSent ? (
+        <SuccessPanel
+          title={offerId ? 'Demande de devis envoyée' : 'Message envoyé'}
+          message="Merci ! Nous vous répondons dans les meilleurs délais."
+          onReset={() => setIsSent(false)}
+        />
+      ) : (
+        <>
+          {!offerId && (
+            <div className="mb-10 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2">
+              {[
+                { href: '/rendez-vous', title: 'Prendre rendez-vous', text: 'Choisissez un jour et un créneau' },
+                { href: '/devis', title: 'Demander un devis', text: 'Pneus, moto, entretien, réparation' },
+              ].map((item) => (
+                <Link key={item.href} href={item.href} className="group flex items-center justify-between gap-4 bg-stone/60 px-5 py-4 transition-colors hover:bg-stone">
+                  <span>
+                    <span className="heading block text-xl">{item.title}</span>
+                    <span className="block text-sm text-muted">{item.text}</span>
+                  </span>
+                  <ArrowRight className="h-4 w-4 flex-shrink-0 text-brand transition-transform group-hover:translate-x-1" />
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="relative space-y-12">
+            <FormStep number={1} title="Vos coordonnées">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <Field label="Nom complet" htmlFor="name" required error={errors.name?.message}>
+                  <input
+                    type="text"
+                    id="name"
+                    autoComplete="name"
+                    {...register('name', { required: 'Le nom est requis' })}
+                    className={inputClass}
+                    placeholder="Votre nom"
+                  />
+                </Field>
+                <Field label="Email" htmlFor="email" required error={errors.email?.message}>
+                  <input
+                    type="email"
+                    id="email"
+                    autoComplete="email"
+                    {...register('email', {
+                      required: 'L\'email est requis',
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: 'Email invalide'
+                      }
+                    })}
+                    className={inputClass}
+                    placeholder="votre@email.com"
+                  />
+                </Field>
               </div>
-            ) : offer && (
-              <div className="mt-6 inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-lg border border-white/20">
-                <Tag className="w-5 h-5" />
-                <span className="font-bold">{offer.title}</span>
-                {offer.price && (
-                  <span className="text-gray-300">- {offer.price.toFixed(2)}€</span>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <Field label="Téléphone" htmlFor="phone">
+                  <input
+                    type="tel"
+                    id="phone"
+                    autoComplete="tel"
+                    {...register('phone')}
+                    className={inputClass}
+                    placeholder="06 12 34 56 78"
+                  />
+                </Field>
+                {offerId ? (
+                  <Field label="Plaque d'immatriculation" htmlFor="licensePlate" required error={errors.licensePlate?.message}>
+                    <input
+                      type="text"
+                      id="licensePlate"
+                      {...register('licensePlate', {
+                        required: 'La plaque d\'immatriculation est requise',
+                        onChange: (e) => {
+                          e.target.value = e.target.value.toUpperCase().replace(/\s/g, '');
+                        }
+                      })}
+                      className={`${inputClass} font-mono uppercase`}
+                      placeholder="AB-123-CD"
+                      maxLength={9}
+                    />
+                  </Field>
+                ) : (
+                  <Field label="Sujet" htmlFor="subject">
+                    <input
+                      type="text"
+                      id="subject"
+                      {...register('subject')}
+                      className={inputClass}
+                      placeholder="Sujet de votre message"
+                    />
+                  </Field>
                 )}
               </div>
-            )}
-          </div>
-        </div>
-      </section>
+            </FormStep>
 
-      {/* Contact Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-7xl mx-auto">
-            {/* Contact Info */}
-            <div className="lg:col-span-1 space-y-8">
-              <div>
-                <h2 className="text-2xl font-bold mb-6">Informations de contact</h2>
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Phone className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold mb-1">Téléphone</h3>
-                      <p className="text-gray-600">0609369490</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold mb-1">Email</h3>
-                      <p className="text-gray-600">contact@garage-belle-croix.fr</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold mb-1">Adresse</h3>
-                      <p className="text-gray-600">1 Rue inore Fabbri<br />57365 Ennery</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold mb-1">Horaires</h3>
-                      {isLoadingHours ? (
-                        <div className="flex items-center gap-2">
-                          <LoadingSpinner size="small" showText={false} />
-                          <p className="text-gray-600 text-sm">Chargement...</p>
-                        </div>
-                      ) : (
-                        <p className="text-gray-600 text-sm">
-                          {groupedHours.map((group, index) => (
-                            <span key={index}>
-                              {group.label}: {group.hours}
-                              {index < groupedHours.length - 1 && <br />}
-                            </span>
-                          ))}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <FormStep number={2} title="Votre message">
+              <Field label="Message" htmlFor="message" required error={errors.message?.message}>
+                <textarea
+                  id="message"
+                  rows={6}
+                  {...register('message', { required: 'Le message est requis' })}
+                  className={`${inputClass} h-auto resize-none py-3`}
+                  placeholder="Votre message…"
+                />
+              </Field>
+            </FormStep>
 
-            {/* Contact Form */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200">
-                <h2 className="text-2xl font-bold mb-6">
-                  {offerId ? 'Formulaire de demande de devis' : 'Envoyez-nous un message'}
-                </h2>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-bold mb-2">
-                        Nom complet *
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        {...register('name', { required: 'Le nom est requis' })}
-                        className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
-                        placeholder="Votre nom"
-                      />
-                      {errors.name && (
-                        <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-bold mb-2">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        {...register('email', { 
-                          required: 'L\'email est requis',
-                          pattern: {
-                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                            message: 'Email invalide'
-                          }
-                        })}
-                        className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
-                        placeholder="votre@email.com"
-                      />
-                      {errors.email && (
-                        <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-bold mb-2">
-                        Téléphone
-                      </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        {...register('phone')}
-                        className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
-                        placeholder="0609369490"
-                      />
-                    </div>
-
-                    {offerId && (
-                      <div>
-                        <label htmlFor="licensePlate" className="block text-sm font-bold mb-2">
-                          Plaque d'immatriculation *
-                        </label>
-                        <input
-                          type="text"
-                          id="licensePlate"
-                          {...register('licensePlate', { 
-                            required: offerId ? 'La plaque d\'immatriculation est requise' : false,
-                            onChange: (e) => {
-                              e.target.value = e.target.value.toUpperCase().replace(/\s/g, '');
-                            }
-                          })}
-                          className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition uppercase font-mono"
-                          placeholder="AB-123-CD"
-                          style={{ textTransform: 'uppercase' }}
-                          maxLength={9}
-                        />
-                        {errors.licensePlate && (
-                          <p className="text-red-500 text-sm mt-1">{errors.licensePlate.message}</p>
-                        )}
-                      </div>
-                    )}
-
-                    {!offerId && (
-                      <div>
-                        <label htmlFor="subject" className="block text-sm font-bold mb-2">
-                          Sujet
-                        </label>
-                        <input
-                          type="text"
-                          id="subject"
-                          {...register('subject')}
-                          className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
-                          placeholder="Sujet de votre message"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-bold mb-2">
-                      Message *
-                    </label>
-                    <textarea
-                      id="message"
-                      rows={6}
-                      {...register('message', { required: 'Le message est requis' })}
-                      className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition resize-none"
-                      placeholder="Votre message..."
-                    />
-                    {errors.message && (
-                      <p className="text-red-500 text-sm mt-1">{errors.message.message}</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="group w-full bg-black text-white py-4 font-bold text-lg rounded-lg hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                  >
-                    {isSubmitting ? (
-                      'Envoi en cours...'
-                    ) : (
-                      <>
-                        Envoyer le message
-                        <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Footer />
-    </div>
+            <button type="submit" disabled={isSubmitting} className="btn-accent h-14 w-full text-base">
+              {isSubmitting ? 'Envoi en cours…' : offerId ? 'Envoyer ma demande de devis' : 'Envoyer le message'}
+            </button>
+            <PrivacyNote />
+            <HoneypotField register={register} />
+          </form>
+        </>
+      )}
+    </RequestPageShell>
   );
 }
 
 export default function ContactPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-paper">
         <Header />
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex min-h-[60vh] items-center justify-center">
           <LoadingSpinner size="large" />
         </div>
         <Footer />

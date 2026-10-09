@@ -2,20 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { offersAPI, getOfferImageUrl } from '@/lib/api';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { ArrowRight, TrendingDown, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { offersAPI } from '@/lib/api';
+import OfferCard, { type Offer } from '@/components/OfferCard';
+import SectionHeading, { GhostWord } from '@/components/SectionHeading';
 
-export default function OffersPreview() {
-  const [offersByCategory, setOffersByCategory] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function OffersPreview({
+  index,
+  total,
+  initialOffers,
+}: {
+  index: number;
+  total: number;
+  // Offres déjà chargées côté serveur (HTML lisible par Google) ; sinon chargement dans le navigateur
+  initialOffers?: Offer[];
+}) {
+  const [offers, setOffers] = useState<Offer[]>(initialOffers || []);
+  const [isLoading, setIsLoading] = useState(!initialOffers);
 
   useEffect(() => {
+    if (initialOffers) return;
     const loadOffers = async () => {
       try {
         const data = await offersAPI.getAll();
-        setOffersByCategory(data);
+        setOffers(data.flatMap((cat: any) => cat.offers || []));
       } catch (error) {
         console.error('Error loading offers:', error);
       } finally {
@@ -23,116 +33,60 @@ export default function OffersPreview() {
       }
     };
     loadOffers();
-  }, []);
-
-  const allOffers = offersByCategory.flatMap((cat: any) => cat.offers || []);
+  }, [initialOffers]);
 
   return (
-    <section className={`py-20 ${allOffers.length > 0 ? 'bg-white' : 'bg-gradient-to-b from-gray-50 to-white'}`}>
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <TrendingDown className="w-6 h-6 text-black" />
-            <h2 className="text-3xl md:text-4xl font-black text-black tracking-tight">Nos Offres</h2>
-          </div>
-          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            {allOffers.length > 0 
-              ? 'Découvrez nos meilleures offres et promotions exclusives du moment'
-              : 'Bientôt de nouvelles offres exceptionnelles !'}
-          </p>
+    <section id="offres" className="relative scroll-mt-24 overflow-hidden bg-ink bg-hatch py-20 text-white md:py-28">
+      <GhostWord word="Offres" dark className="-left-6 top-6 md:-left-10 md:top-10" />
+
+      <div className="container-site relative">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <SectionHeading index={index} total={total} eyebrow="Offres du moment" title="Le bon plan" accent="de la saison." dark />
+          <Link href="/offres" className="link-arrow hidden md:inline-flex">
+            Toutes les offres <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <LoadingSpinner size="large" />
+          <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={`h-[480px] animate-pulse border border-white/10 bg-ink-800 ${i > 0 ? 'hidden md:block' : ''}`} />
+            ))}
           </div>
-        ) : allOffers.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {allOffers.slice(0, 3).map((offer: any) => (
-                <div 
-                  key={offer._id} 
-                  className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-all duration-300 hover:shadow-lg group"
-                >
-                  {offer.isPromotion && (
-                    <div className="relative bg-gradient-to-r from-red-600 to-red-700 text-white">
-                      <div className="absolute top-3 right-3 z-10 bg-black text-white px-3 py-1.5 font-bold text-xs rounded-lg shadow-lg flex items-center gap-1.5">
-                        <TrendingDown className="w-3 h-3" />
-                        -{offer.promotionPercentage}% OFF
-                      </div>
-                      <div className="h-1 bg-gradient-to-r from-red-500 to-red-600"></div>
-                    </div>
-                  )}
-                  {offer.image && (
-                    <div className="relative w-full h-40 bg-gray-200">
-                      <Image
-                        src={getOfferImageUrl(offer.image)}
-                        alt={offer.title}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="p-6">
-                    <div className="mb-3">
-                      <span className="inline-block bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                        {offer.category}
-                      </span>
-                    </div>
-                    <h3 className="text-xl font-bold mb-3 group-hover:text-gray-700 transition-colors text-black">
-                      {offer.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-6 leading-relaxed line-clamp-3">
-                      {offer.description}
-                    </p>
-                    <div className="flex items-baseline gap-3 mb-6 pb-4 border-b border-gray-200">
-                      {offer.originalPrice && (
-                        <span className="text-gray-400 line-through text-sm font-semibold">
-                          {offer.originalPrice.toFixed(2)}€
-                        </span>
-                      )}
-                      <span className="text-2xl font-black text-black">{offer.price.toFixed(2)}€</span>
-                    </div>
-                    <Link 
-                      href={`/contact?offer=${offer._id}`}
-                      className="block w-full bg-gradient-to-r from-black to-gray-800 text-white text-center py-3 font-bold text-sm rounded-lg hover:from-gray-800 hover:to-black transition-all duration-300 group-hover:shadow-lg"
-                    >
-                      Demander un devis
-                    </Link>
-                  </div>
-                </div>
-              ))}
+        ) : offers.length === 0 ? (
+          <div className="mt-14 flex flex-col gap-6 border border-white/10 bg-ink-800 p-8 md:flex-row md:items-center md:justify-between md:p-10">
+            <div>
+              <p className="heading text-3xl">Pas d’offre en cours</p>
+              <p className="mt-2 text-white/55">Les prochaines promos arrivent bientôt. En attendant, le devis reste gratuit.</p>
             </div>
-            <div className="text-center">
-              <Link 
-                href="/offres"
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-black to-gray-800 text-white px-12 py-5 font-black text-xl rounded-xl hover:from-gray-800 hover:to-black transition-all duration-300 shadow-2xl hover:shadow-black/30 transform hover:scale-110"
-              >
-                Voir toutes les offres
-                <ArrowRight className="w-6 h-6" />
-              </Link>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-20">
-            <div className="inline-block bg-gray-100 p-8 rounded-2xl mb-6">
-              <Sparkles className="w-16 h-16 text-gray-400" />
-            </div>
-            <p className="text-2xl text-gray-500 font-bold mb-4">Aucune offre disponible pour le moment</p>
-            <p className="text-xl text-gray-400 mb-8">Revenez bientôt pour découvrir nos nouvelles offres exceptionnelles !</p>
-            <Link 
-              href="/contact"
-              className="inline-flex items-center gap-3 bg-black text-white px-12 py-5 font-black text-xl rounded-xl hover:bg-gray-800 transition-all duration-300 shadow-2xl transform hover:scale-110"
-            >
-              Nous contacter
-              <ArrowRight className="w-6 h-6" />
+            <Link href="/devis" className="btn-accent">
+              Demander un devis
             </Link>
           </div>
+        ) : (
+          <div
+            className={`no-scrollbar -mx-5 mt-14 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 md:mx-0 md:gap-6 md:overflow-visible md:px-0 ${
+              offers.length >= 3 ? 'md:grid md:grid-cols-2 lg:grid-cols-3' : 'md:justify-center'
+            }`}
+          >
+            {offers.slice(0, 3).map((offer) => (
+              <OfferCard
+                key={offer._id}
+                offer={offer}
+                className={`flex-shrink-0 snap-start ${offers.length === 1 ? 'w-full' : 'w-[85%]'} ${
+                  offers.length >= 3 ? 'md:w-auto' : 'md:w-[calc(50%-12px)] lg:w-[380px]'
+                }`}
+              />
+            ))}
+          </div>
         )}
+
+        <div className="mt-12 flex justify-center">
+          <Link href="/offres" className="btn-outline-light">
+            Voir toutes les offres <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </section>
   );
 }
-
-
-

@@ -13,6 +13,7 @@ import contactRoutes from './routes/contacts.js';
 import categoryRoutes from './routes/categories.js';
 import quoteRoutes from './routes/quotes.js';
 import openingHoursRoutes from './routes/openingHours.js';
+import appointmentRoutes from './routes/appointments.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +30,9 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Trust le premier proxy (nginx, etc.) pour X-Forwarded-For / rate limiting
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(helmet());
@@ -77,6 +81,7 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/opening-hours', openingHoursRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

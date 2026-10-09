@@ -8,11 +8,12 @@ import ContactsManagement from './ContactsManagement';
 import QuotesManagement from './QuotesManagement';
 import CategoryOrderManagement from './CategoryOrderManagement';
 import OpeningHoursManagement from './OpeningHoursManagement';
-import { Wrench, Package, Mail, LogOut, Settings, FileText, Clock } from 'lucide-react';
+import AppointmentsManagement from './AppointmentsManagement';
+import { Wrench, Package, Mail, LogOut, Settings, FileText, Clock, CalendarCheck } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { logout } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'offers' | 'contacts' | 'quotes' | 'categories' | 'hours'>('offers');
+  const [activeTab, setActiveTab] = useState<'appointments' | 'offers' | 'contacts' | 'quotes' | 'categories' | 'hours'>('appointments');
 
   const handleLogout = async () => {
     try {
@@ -52,7 +53,18 @@ export default function AdminDashboard() {
       {/* Tabs */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto whitespace-nowrap">
+            <button
+              onClick={() => setActiveTab('appointments')}
+              className={`flex items-center gap-2 py-4 px-6 font-bold border-b-3 transition-all ${
+                activeTab === 'appointments'
+                  ? 'border-black text-black'
+                  : 'border-transparent text-gray-500 hover:text-black hover:border-gray-300'
+              }`}
+            >
+              <CalendarCheck className="w-5 h-5" />
+              Rendez-vous
+            </button>
             <button
               onClick={() => setActiveTab('offers')}
               className={`flex items-center gap-2 py-4 px-6 font-bold border-b-3 transition-all ${
@@ -114,6 +126,7 @@ export default function AdminDashboard() {
 
       {/* Content */}
       <div className="container mx-auto px-4 py-8">
+        {activeTab === 'appointments' && <AppointmentsManagement />}
         {activeTab === 'offers' && <OffersManagement />}
         {activeTab === 'contacts' && <ContactsManagement />}
         {activeTab === 'quotes' && <QuotesManagement />}

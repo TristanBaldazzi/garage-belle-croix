@@ -22,6 +22,10 @@ const offerSchema = new mongoose.Schema({
   image: {
     type: String
   },
+  validUntil: {
+    type: Date,
+    default: null
+  },
   isPromotion: {
     type: Boolean,
     default: false

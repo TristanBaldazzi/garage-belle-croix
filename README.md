@@ -61,6 +61,8 @@ Le frontend démarre sur le port **3000** par défaut.
 - `JWT_SECRET`: Secret pour les tokens JWT
 - `JWT_EXPIRE`: Durée de validité des tokens (défaut: 7d)
 - `FRONTEND_URL`: URL du frontend pour CORS
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (optionnel) : serveur d'envoi d'e-mails
+- `NOTIFY_EMAIL` (optionnel) : adresse du garage qui reçoit un e-mail à chaque demande de rendez-vous, de devis ou de contact. Sans SMTP configuré, les demandes restent visibles dans l'admin uniquement.
 
 ### Frontend (.env.local)
 - `NEXT_PUBLIC_API_URL`: URL de l'API backend

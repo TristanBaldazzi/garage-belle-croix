@@ -1,11 +1,13 @@
 import express from 'express';
 import Contact from '../models/Contact.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
+import { formLimiter, honeypot } from '../middleware/formProtection.js';
+import { notifyGarage } from '../utils/mailer.js';
 
 const router = express.Router();
 
 // Create contact request (public)
-router.post('/', async (req, res) => {
+router.post('/', formLimiter, honeypot, async (req, res) => {
   try {
     const { name, email, phone, message, subject } = req.body;
 
@@ -24,6 +26,14 @@ router.post('/', async (req, res) => {
     });
 
     await contact.save();
+
+    notifyGarage(`Nouveau message — ${subject || name}`, [
+      ['Nom', name],
+      ['Téléphone', phone],
+      ['Email', email],
+      ['Sujet', subject],
+      ['Message', message]
+    ], email);
     res.status(201).json({ 
       message: 'Demande de contact envoyée avec succès',
       contact 

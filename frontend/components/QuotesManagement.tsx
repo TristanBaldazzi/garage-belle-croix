@@ -11,14 +11,19 @@ interface QuoteRequest {
   name: string;
   email: string;
   phone?: string;
-  licensePlate: string;
+  licensePlate?: string;
   message: string;
-  offerId: {
+  offerId?: {
     _id: string;
     title: string;
     price?: number;
-  };
-  offerTitle: string;
+  } | null;
+  offerTitle?: string;
+  service?: string;
+  vehicleType?: 'voiture' | 'moto';
+  vehicle?: string;
+  tireSize?: string;
+  tireQuantity?: number;
   isRead: boolean;
   isArchived: boolean;
   createdAt: string;
@@ -108,7 +113,7 @@ export default function QuotesManagement() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h2 className="text-3xl font-black mb-2">Demandes de devis</h2>
-          <p className="text-gray-600">Gérez les demandes de devis liées aux offres</p>
+          <p className="text-gray-600">Demandes de devis liées aux offres et devis libres (pneus, moto, auto)</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -193,11 +198,18 @@ export default function QuotesManagement() {
                       <div className="flex items-center gap-3 text-sm mb-2">
                         <div className="flex items-center gap-2 text-gray-500">
                           <Tag className="w-4 h-4" />
-                          <span className="font-bold">{quote.offerTitle}</span>
+                          <span className="font-bold">{quote.offerTitle || quote.service}</span>
                         </div>
-                        <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded font-black text-black">
-                          🚗 {quote.licensePlate}
-                        </div>
+                        {quote.tireSize && (
+                          <div className="bg-gray-100 px-2 py-1 rounded font-mono font-bold text-black">
+                            {quote.tireSize}{quote.tireQuantity ? ` ×${quote.tireQuantity}` : ''}
+                          </div>
+                        )}
+                        {quote.licensePlate && (
+                          <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded font-black text-black">
+                            {quote.vehicleType === 'moto' ? '🏍️' : '🚗'} {quote.licensePlate}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">
@@ -282,28 +294,50 @@ export default function QuotesManagement() {
                   </div>
                 )}
 
-                <div>
-                  <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                    Plaque d'immatriculation
-                  </label>
-                  <div className="bg-gray-100 p-3 rounded-lg">
-                    <p className="font-black text-lg text-black">{selectedQuote.licensePlate}</p>
+                {selectedQuote.licensePlate && (
+                  <div>
+                    <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
+                      Plaque d'immatriculation
+                    </label>
+                    <div className="bg-gray-100 p-3 rounded-lg">
+                      <p className="font-black text-lg text-black">{selectedQuote.licensePlate}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div>
-                  <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                    Offre concernée
-                  </label>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="font-black text-black">{selectedQuote.offerTitle}</p>
-                    {selectedQuote.offerId?.price && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Prix: {selectedQuote.offerId.price.toFixed(2)}€
-                      </p>
-                    )}
+                {selectedQuote.offerTitle ? (
+                  <div>
+                    <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
+                      Offre concernée
+                    </label>
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <p className="font-black text-black">{selectedQuote.offerTitle}</p>
+                      {selectedQuote.offerId?.price && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          Prix: {selectedQuote.offerId.price.toFixed(2)}€
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
+                      Prestation
+                    </label>
+                    <div className="bg-gray-50 p-3 rounded-lg space-y-1">
+                      <p className="font-black text-black">{selectedQuote.service}</p>
+                      <p className="text-sm text-gray-600">
+                        {selectedQuote.vehicleType === 'moto' ? 'Moto' : 'Voiture'}
+                        {selectedQuote.vehicle && ` — ${selectedQuote.vehicle}`}
+                      </p>
+                      {selectedQuote.tireSize && (
+                        <p className="text-sm font-mono font-bold">
+                          Pneus : {selectedQuote.tireSize}{selectedQuote.tireQuantity ? ` (×${selectedQuote.tireQuantity})` : ''}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
@@ -326,7 +360,7 @@ export default function QuotesManagement() {
                 <div className="pt-4 border-t border-gray-200">
                   <div className="flex items-center gap-2">
                     <a
-                      href={`mailto:${selectedQuote.email}?subject=Re: Demande de devis - ${selectedQuote.offerTitle}`}
+                      href={`mailto:${selectedQuote.email}?subject=Re: Demande de devis - ${selectedQuote.offerTitle || selectedQuote.service || ''}`}
                       className="flex-1 bg-black text-white px-4 py-2 rounded-lg font-black text-center hover:bg-gray-800 transition"
                     >
                       Répondre

@@ -2,51 +2,133 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-paper text-ink antialiased;
+  }
+
+  h1, h2, h3 {
+    @apply font-display;
+  }
+
+  .font-admin h1,
+  .font-admin h2,
+  .font-admin h3 {
+    font-family: inherit;
+  }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+@layer components {
+  .container-site {
+    @apply mx-auto w-full max-w-[1240px] px-5 md:px-10;
+  }
+
+  /* Titres : condensé, gras, italique, capitales */
+  .heading {
+    @apply font-display font-extrabold uppercase italic leading-[0.92] tracking-[-0.01em];
+  }
+
+  /* Petits libellés espacés */
+  .caps {
+    @apply font-display text-[11px] font-semibold uppercase tracking-[0.24em];
+  }
+
+  .eyebrow {
+    @apply caps flex items-center gap-3 text-current;
+  }
+
+  .eyebrow::before {
+    content: '';
+    @apply block h-[2px] w-7 flex-shrink-0 bg-brand;
+  }
+
+  .text-outline {
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1.5px currentColor;
+  }
+
+  /* Boutons en parallélogramme : le fond est porté par un pseudo-élément incliné */
+  .btn {
+    @apply relative isolate inline-flex h-12 items-center justify-center gap-2.5 whitespace-nowrap px-7 font-display text-[13px] font-bold uppercase tracking-[0.14em] transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn::before {
+    content: '';
+    @apply absolute inset-0 -z-10 transition-colors;
+    transform: skewX(-14deg);
+  }
+
+  .btn-accent {
+    @apply btn text-white before:bg-brand hover:before:bg-garage-accent-dark;
+  }
+
+  .btn-dark {
+    @apply btn text-white before:bg-ink hover:before:bg-ink-700;
+  }
+
+  .btn-outline-light {
+    @apply btn text-white before:border before:border-white/40 hover:before:border-white hover:before:bg-white/5;
+  }
+
+  .btn-outline-dark {
+    @apply btn text-ink before:border before:border-ink/25 before:bg-white hover:before:border-ink;
+  }
+
+  .link-arrow {
+    @apply caps inline-flex items-center gap-2 text-brand transition-colors hover:text-garage-accent-dark;
+  }
+
+  .field-input {
+    @apply h-12 w-full rounded-none border border-line bg-white px-4 text-[15px] text-ink placeholder:text-gray-400 transition-colors focus:border-ink focus:outline-none focus:ring-1 focus:ring-ink;
+  }
+
+  /* Hachures diagonales des fonds sombres */
+  .bg-hatch {
+    background-image: repeating-linear-gradient(
+      -60deg,
+      rgba(255, 255, 255, 0.025) 0 1px,
+      transparent 1px 22px
+    );
+  }
+
+  .clip-hero {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 56px), 0 100%);
+  }
+
+  @media (max-width: 767px) {
+    .clip-hero {
+      clip-path: polygon(0 0, 100% 0, 100% calc(100% - 28px), 0 100%);
+    }
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 10px;
+::selection {
+  background: #E10600;
+  color: #fff;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #000;
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #333;
-}
-
-/* Smooth animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -55,7 +137,7 @@ body {
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
+  animation: fadeInUp 0.5s ease-out;
 }
 
 @keyframes fadeIn {
@@ -68,20 +150,7 @@ body {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-bounce {
-  animation: bounce 2s infinite;
+  animation: fadeIn 0.2s ease-out;
 }
 
 @keyframes spin-slow {
@@ -97,10 +166,8 @@ body {
   animation: spin-slow 3s linear infinite;
 }
 
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, #000 0%, #333 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }

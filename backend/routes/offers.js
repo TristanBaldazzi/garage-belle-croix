@@ -16,7 +16,13 @@ const router = express.Router();
 // Get all active offers grouped by category (public)
 router.get('/', async (req, res) => {
   try {
-    const offers = await Offer.find({ isActive: true })
+    // Les offres dont la date de fin est passée ne sont plus affichées
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const offers = await Offer.find({
+      isActive: true,
+      $or: [{ validUntil: null }, { validUntil: { $gte: startOfToday } }]
+    })
       .sort({ createdAt: -1 });
     
     // Get category order

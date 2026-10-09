@@ -2,222 +2,188 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { MapPin, Navigation, X } from 'lucide-react';
+import { Navigation, X, Phone, MapPin } from 'lucide-react';
 import { useOpeningHours } from '@/lib/useOpeningHours';
+import { SITE } from '@/lib/site';
+import SectionHeading, { GhostWord } from '@/components/SectionHeading';
+import OpeningStatus from '@/components/OpeningStatus';
 
-export default function LocationMap() {
+const ACCESS_STEPS = [
+  {
+    title: 'Rue Inore Fabbri',
+    text: 'Rejoignez la rue Inore Fabbri (D52d), zone d’activités d’Ennery. Sur Google Maps, elle s’affiche aussi « Pièce de Boulay ».',
+  },
+  {
+    title: 'Longez l’usine Aprometal',
+    text: 'Tournez dans la petite route « Pièce de Boulay » qui remonte le long du côté gauche (ouest) de la grande usine Aprometal.',
+  },
+  {
+    title: 'Le toit rouge, à gauche',
+    text: 'Environ 100 m plus loin, le garage est le bâtiment au toit rouge sur votre gauche. Parking devant l’atelier.',
+  },
+];
+
+export default function LocationMap({ index, total }: { index: number; total: number }) {
   const [showNavigationPopup, setShowNavigationPopup] = useState(false);
-  const { getGroupedHours, isLoading } = useOpeningHours();
-  const groupedHours = getGroupedHours();
-
-  const address = "Garage De La Belle Croix - Ennery -Metz-Thionville";
-  const mapsUrl = "https://www.google.com/maps/dir/?api=1&destination=Garage+De+La+Belle+Croix+Ennery";
-  const wazeUrl = "https://waze.com/ul?q=Garage+De+La+Belle+Croix+Ennery";
+  // La vue satellite aide à repérer le bâtiment (toit rouge)
+  const [mapView, setMapView] = useState<'plan' | 'satellite'>('satellite');
+  const { getFormattedHours, getStatus, isLoading } = useOpeningHours();
+  const days = getFormattedHours();
 
   const handleNavigation = (type: 'maps' | 'waze') => {
-    if (type === 'maps') {
-      window.open(mapsUrl, '_blank');
-    } else {
-      window.open(wazeUrl, '_blank');
-    }
+    window.open(type === 'maps' ? SITE.mapsUrl : SITE.wazeUrl, '_blank');
     setShowNavigationPopup(false);
   };
 
   return (
     <>
-      <section className="bg-white border-b-2 border-black relative">
-        <div className="grid grid-cols-1 lg:grid-cols-2">
-          {/* Left Panel - Information */}
-          <div className="bg-gradient-to-br from-gray-50 via-white to-gray-50 p-5 md:p-6 lg:p-8 flex flex-col justify-center order-2 lg:order-1 relative overflow-hidden">
-            {/* Decorative background elements */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-black/3 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/3 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-            
-            <div className="w-full max-w-lg mx-auto px-4 lg:px-8 relative z-10">
-              <div className="mb-6">
-                <div className="mb-3">
-                  <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                    LOCALISATION
-                  </span>
-                </div>
-                <h2 className="text-2xl md:text-3xl font-black mb-2 text-black leading-tight">
-                  Notre Localisation
-                </h2>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Venez nous rendre visite dans notre garage à Ennery
-                </p>
+      <section id="acces" className="relative scroll-mt-24 overflow-hidden bg-white py-20 md:py-28">
+        <GhostWord word="Ennery" className="-right-4 top-4 md:-right-8 md:top-8" />
+
+        <div className="container-site relative">
+          <SectionHeading index={index} total={total} eyebrow="Nous trouver" title="Passez nous voir" accent="à Ennery." />
+
+          <div className="mt-14 grid grid-cols-1 border border-line bg-white shadow-[0_30px_60px_-30px_rgba(11,11,12,0.25)] lg:grid-cols-12">
+            <div className="relative min-h-[340px] bg-stone md:min-h-[440px] lg:col-span-7">
+              <iframe
+                key={mapView}
+                title="Plan d'accès au Garage de la Belle Croix"
+                src={`https://maps.google.com/maps?q=${SITE.lat},${SITE.lng}&z=${mapView === 'satellite' ? 18 : 17}&t=${mapView === 'satellite' ? 'k' : 'm'}&hl=fr&output=embed`}
+                className={`absolute inset-0 h-full w-full ${mapView === 'plan' ? 'grayscale-[65%] contrast-[1.05]' : ''}`}
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <span className="caps pointer-events-none absolute left-4 top-4 flex items-center gap-2 bg-brand px-3 py-2 text-[10px] text-white shadow-lg">
+                <MapPin className="h-3.5 w-3.5" strokeWidth={2.25} />
+                Garage de la Belle Croix
+              </span>
+              <div className="absolute bottom-8 left-4 flex bg-ink p-1 shadow-lg" role="radiogroup" aria-label="Type de carte">
+                {(['plan', 'satellite'] as const).map((view) => (
+                  <button
+                    key={view}
+                    type="button"
+                    role="radio"
+                    aria-checked={mapView === view}
+                    onClick={() => setMapView(view)}
+                    className={`caps px-3 py-2 text-[10px] transition-colors ${
+                      mapView === view ? 'bg-brand text-white' : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    {view === 'plan' ? 'Plan' : 'Satellite'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col p-6 md:p-10 lg:col-span-5">
+              <p className="caps text-muted">Adresse</p>
+              <p className="heading mt-3 text-[30px]">
+                {SITE.street}
+                <br />
+                {SITE.postalCode} {SITE.city}
+              </p>
+              <p className="mt-2 text-[15px] text-muted">Entre Metz et Thionville, parking devant l’atelier.</p>
+
+              <p className="caps mt-8 text-muted">Téléphone</p>
+              <p className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <a href={SITE.phoneHref} className="heading text-[30px] transition-colors hover:text-brand">{SITE.phone}</a>
+                <a href={SITE.phone2Href} className="heading text-xl text-muted transition-colors hover:text-brand">{SITE.phone2}</a>
+              </p>
+
+              <div className="mt-8 flex items-center justify-between gap-4 border-b border-line pb-3">
+                <p className="caps text-muted">Horaires</p>
+                <OpeningStatus status={getStatus()} />
               </div>
 
-              <div className="space-y-5 mb-6">
-                {/* Adresse */}
-                <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:border-black transition-all duration-300 hover:shadow-lg group">
-                  <div className="mb-2">
-                    <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                      ADRESSE
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-gradient-to-br from-black to-gray-800 p-2 rounded-lg flex-shrink-0 shadow-md group-hover:scale-110 transition-transform">
-                      <MapPin className="w-4 h-4 text-white" />
+              <dl className="text-[15px]">
+                {isLoading ? (
+                  <p className="py-4 text-muted">Chargement…</p>
+                ) : (
+                  days.map((day) => (
+                    <div
+                      key={day.key}
+                      className={`flex items-center justify-between gap-4 border-b border-line py-2.5 ${day.isToday ? '-mx-3 bg-stone px-3' : ''}`}
+                    >
+                      <dt className="caps flex items-center gap-2 text-[12px] text-ink">
+                        {day.label}
+                        {day.isToday && <span className="bg-brand px-1.5 py-0.5 text-[9px] text-white">Aujourd’hui</span>}
+                      </dt>
+                      <dd className={day.isClosed ? 'text-muted' : day.isToday ? 'font-semibold' : ''}>{day.shortHours}</dd>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-black leading-relaxed font-bold mb-1">
-                        Garage De La Belle Croix
-                      </p>
-                      <p className="text-xs text-gray-600 font-medium">
-                        1 Rue inore Fabbri, 57365 Ennery
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  ))
+                )}
+              </dl>
 
-                {/* Navigation */}
-                <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:border-black transition-all duration-300 hover:shadow-lg">
-                  <div className="mb-3">
-                    <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                      NAVIGATION
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="bg-gradient-to-br from-black to-gray-800 p-2 rounded-lg flex-shrink-0 shadow-md">
-                      <Navigation className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <button
-                        onClick={() => setShowNavigationPopup(true)}
-                        className="w-full bg-gradient-to-r from-black to-gray-800 text-white px-4 py-2.5 rounded-lg font-black text-sm hover:from-gray-800 hover:to-black transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
-                      >
-                        <Navigation className="w-4 h-4" />
-                        J'y vais
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Horaires */}
-              <div className="bg-gradient-to-br from-black via-gray-900 to-black text-white p-5 rounded-lg shadow-xl border border-gray-800 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl"></div>
-                <div className="relative z-10">
-                  <div className="mb-4">
-                    <p className="text-base font-black">Horaires d'ouverture</p>
-                  </div>
-                  <div className="space-y-2 text-gray-200 text-xs">
-                    {isLoading ? (
-                      <p className="text-center py-2">Chargement...</p>
-                    ) : (
-                      groupedHours.map((group, index) => (
-                        <div
-                          key={index}
-                          className={`flex justify-between items-center ${
-                            index < groupedHours.length - 1 ? 'pb-2 border-b border-gray-700/50' : ''
-                          }`}
-                        >
-                          <span className="font-bold">{group.label}</span>
-                          <span className="font-semibold bg-white/10 px-2 py-1 rounded-md">{group.hours}</span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+              <div className="mt-8 grid grid-cols-2 gap-4">
+                <button onClick={() => setShowNavigationPopup(true)} className="btn-accent">
+                  <Navigation className="h-4 w-4" strokeWidth={2.25} />
+                  J’y vais
+                </button>
+                <a href={SITE.phoneHref} className="btn-outline-dark">
+                  <Phone className="h-4 w-4" strokeWidth={2.25} />
+                  Appeler
+                </a>
               </div>
             </div>
           </div>
 
-          {/* Right Panel - Map avec effet 3D */}
-          <div className="relative bg-gray-200 order-1 lg:order-2" style={{ minHeight: '350px' }}>
-            <div className="absolute inset-0 p-4 lg:p-6">
-              <div 
-                className="w-full h-full rounded-lg overflow-hidden shadow-xl transform hover:scale-[1.01] transition-all duration-500"
-                style={{
-                  boxShadow: '0 15px 30px -10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                  transform: 'perspective(1000px) rotateY(-1.5deg) rotateX(1deg)',
-                  transformStyle: 'preserve-3d',
-                }}
-              >
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2782.0864101362477!2d6.20768017667636!3d49.22594647138443!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4795217671f9a9cb%3A0x1b7aaddec0e47e09!2sGarage%20De%20La%20Belle%20Croix%20-%20Ennery%20-Metz-Thionville!5e1!3m2!1sfr!2sfr!4v1769509293743!5m2!1sfr!2sfr"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="rounded-lg"
-                />
-              </div>
-              
-              {/* Effet de lumière 3D */}
-              <div 
-                className="absolute inset-0 pointer-events-none rounded-lg"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.06) 100%)',
-                  mixBlendMode: 'overlay'
-                }}
-              ></div>
+          {/* Accès pas à pas : le repère Google du garage est placé au carrefour, pas sur le bâtiment */}
+          <div className="border border-t-0 border-line bg-ink bg-hatch p-6 text-white md:p-10">
+            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <p className="heading text-[30px] md:text-4xl">
+                Comment <span className="text-brand">arriver.</span>
+              </p>
+              <p className="max-w-md text-sm text-white/55">
+                Le GPS peut vous arrêter au carrefour de la rue Inore Fabbri : le garage est 100 m plus haut, en retrait.
+              </p>
             </div>
+            <ol className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
+              {ACCESS_STEPS.map((step, i) => (
+                <li key={step.title} className="flex gap-4 border-t border-white/10 pt-5">
+                  <span className="heading text-outline text-4xl text-brand">{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <p className="heading text-xl">{step.title}</p>
+                    <p className="mt-1.5 text-[15px] leading-relaxed text-white/60">{step.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
 
-      {/* Navigation Popup */}
       {showNavigationPopup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative border-4 border-black">
+        <div
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/70 p-4 animate-fade-in sm:items-center"
+          onClick={() => setShowNavigationPopup(false)}
+        >
+          <div className="relative w-full max-w-sm border-t-[3px] border-brand bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setShowNavigationPopup(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors"
+              className="absolute right-4 top-4 text-muted hover:text-ink"
+              aria-label="Fermer"
             >
-              <X className="w-6 h-6" />
+              <X className="h-5 w-5" />
             </button>
-
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-black to-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Navigation className="w-10 h-10 text-white" />
-              </div>
-              <h3 className="text-3xl font-black mb-2 text-black">
-                Choisissez votre application
-              </h3>
-              <p className="text-gray-600 text-lg">
-                Comment souhaitez-vous vous rendre au garage ?
-              </p>
+            <h3 className="heading text-3xl">Itinéraire</h3>
+            <p className="mt-1 text-sm text-muted">Choisissez votre application de navigation</p>
+            <div className="mt-6 space-y-3">
+              {[
+                { type: 'maps' as const, label: 'Google Maps', logo: '/logo/google-maps.png' },
+                { type: 'waze' as const, label: 'Waze', logo: '/logo/waze.png' },
+              ].map((app) => (
+                <button
+                  key={app.type}
+                  onClick={() => handleNavigation(app.type)}
+                  className="flex w-full items-center gap-4 border border-line px-4 py-3.5 text-left font-semibold transition-colors hover:border-ink"
+                >
+                  <Image src={app.logo} alt="" width={28} height={28} className="object-contain" />
+                  {app.label}
+                </button>
+              ))}
             </div>
-
-            <div className="space-y-4">
-              <button
-                onClick={() => handleNavigation('maps')}
-                className="w-full bg-white border-3 border-gray-200 hover:border-blue-500 text-black p-6 rounded-xl font-black text-lg hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 flex items-center justify-center gap-4 group"
-              >
-                <div className="relative w-10 h-10 flex-shrink-0">
-                  <Image
-                    src="/logo/google-maps.png"
-                    alt="Google Maps"
-                    fill
-                    className="object-contain group-hover:scale-110 transition-transform"
-                  />
-                </div>
-                <span>Ouvrir dans Google Maps</span>
-              </button>
-
-              <button
-                onClick={() => handleNavigation('waze')}
-                className="w-full bg-white border-3 border-gray-200 hover:border-blue-400 text-black p-6 rounded-xl font-black text-lg hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 flex items-center justify-center gap-4 group"
-              >
-                <div className="relative w-10 h-10 flex-shrink-0">
-                  <Image
-                    src="/logo/waze.png"
-                    alt="Waze"
-                    fill
-                    className="object-contain group-hover:scale-110 transition-transform"
-                  />
-                </div>
-                <span>Ouvrir dans Waze</span>
-              </button>
-            </div>
-
-            <p className="text-center text-gray-500 text-sm mt-6">
-              Garage De La Belle Croix - Ennery
-            </p>
           </div>
         </div>
       )}

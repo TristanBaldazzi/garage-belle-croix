@@ -17,7 +17,8 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  // Le back-office garde sa propre typographie, indépendante du site vitrine
+  return <div className="font-admin">{children}</div>;
 }
 
 

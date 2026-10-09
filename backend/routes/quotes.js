@@ -2,43 +2,79 @@ import express from 'express';
 import QuoteRequest from '../models/QuoteRequest.js';
 import Offer from '../models/Offer.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
+import { formLimiter, honeypot } from '../middleware/formProtection.js';
+import { notifyGarage } from '../utils/mailer.js';
 
 const router = express.Router();
 
 // Create quote request (public)
-router.post('/', async (req, res) => {
+// Deux cas : devis lié à une offre (offerId + plaque requis) ou devis libre (prestation requise)
+router.post('/', formLimiter, honeypot, async (req, res) => {
   try {
-    const { name, email, phone, licensePlate, message, offerId } = req.body;
+    const { name, email, phone, licensePlate, message, offerId, service, vehicleType, vehicle, tireSize, tireQuantity } = req.body;
 
-    if (!name || !email || !message || !offerId || !licensePlate) {
+    if (!name || !email || !message) {
       return res.status(400).json({ 
-        message: 'Nom, email, plaque d\'immatriculation, message et offre sont requis' 
+        message: 'Nom, email et message sont requis' 
       });
     }
 
-    // Verify offer exists
-    const offer = await Offer.findById(offerId);
-    if (!offer) {
-      return res.status(404).json({ message: 'Offre non trouvée' });
+    let offerTitle;
+    if (offerId) {
+      if (!licensePlate) {
+        return res.status(400).json({ 
+          message: 'Nom, email, plaque d\'immatriculation, message et offre sont requis' 
+        });
+      }
+      // Verify offer exists
+      const offer = await Offer.findById(offerId);
+      if (!offer) {
+        return res.status(404).json({ message: 'Offre non trouvée' });
+      }
+      offerTitle = offer.title;
+    } else if (!service) {
+      return res.status(400).json({ message: 'Merci de préciser la prestation souhaitée' });
     }
 
     const quoteRequest = new QuoteRequest({
       name,
       email,
       phone,
-      licensePlate: licensePlate.toUpperCase().trim(),
+      licensePlate: licensePlate?.toUpperCase().trim(),
       message,
-      offerId,
-      offerTitle: offer.title
+      offerId: offerId || undefined,
+      offerTitle,
+      service,
+      vehicleType,
+      vehicle,
+      tireSize,
+      tireQuantity: tireQuantity ? Number(tireQuantity) : undefined
     });
 
     await quoteRequest.save();
+
+    notifyGarage(`Nouvelle demande de devis — ${offerTitle || service}`, [
+      ['Nom', name],
+      ['Téléphone', phone],
+      ['Email', email],
+      ['Offre', offerTitle],
+      ['Prestation', service],
+      ['Véhicule', vehicle ? `${vehicleType === 'moto' ? 'Moto' : 'Voiture'} — ${vehicle}` : undefined],
+      ['Immatriculation', licensePlate],
+      ['Dimension pneus', tireSize],
+      ['Quantité', tireQuantity],
+      ['Message', message]
+    ], email);
+
     res.status(201).json({ 
       message: 'Demande de devis envoyée avec succès',
       quoteRequest 
     });
   } catch (error) {
     console.error('Error creating quote request:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Données invalides' });
+    }
     res.status(500).json({ message: 'Erreur serveur' });
   }
 });
@@ -64,7 +100,10 @@ router.get('/', authenticate, requireAdmin, async (req, res) => {
         { phone: { $regex: search, $options: 'i' } },
         { licensePlate: { $regex: search, $options: 'i' } },
         { message: { $regex: search, $options: 'i' } },
-        { offerTitle: { $regex: search, $options: 'i' } }
+        { offerTitle: { $regex: search, $options: 'i' } },
+        { service: { $regex: search, $options: 'i' } },
+        { vehicle: { $regex: search, $options: 'i' } },
+        { tireSize: { $regex: search, $options: 'i' } }
       ];
     }
 
