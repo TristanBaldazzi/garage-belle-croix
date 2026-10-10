@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form';
 import { useAuthStore } from '@/lib/store';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { Wrench, Lock, Mail } from 'lucide-react';
+import { Lock, Mail } from 'lucide-react';
+import { adminButton, adminInput, adminLabel } from './admin/ui';
 
 interface LoginForm {
   email: string;
@@ -32,64 +33,78 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
-          <div className="bg-black text-white p-8 text-center">
-            <div className="inline-block bg-white p-3 rounded-lg mb-4">
-              <Wrench className="w-8 h-8 text-black" />
-            </div>
-            <h1 className="text-3xl font-bold mb-2">Espace Administrateur</h1>
-            <p className="text-gray-300 text-sm">Garage de la Belle Croix</p>
+    <div className="grid min-h-screen bg-white lg:grid-cols-2">
+      {/* Visuel de marque */}
+      <div className="relative hidden overflow-hidden bg-ink lg:block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/hero-atelier.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-ink/30" />
+        <div className="absolute -top-6 right-16 flex h-[45%] gap-3" aria-hidden="true">
+          <span className="block w-8 -skew-x-[22deg] bg-brand" />
+          <span className="block w-8 -skew-x-[22deg] bg-brand-dark" />
+          <span className="block w-8 -skew-x-[22deg] bg-brand-deeper" />
+        </div>
+        <div className="relative flex h-full flex-col justify-between p-12 text-white">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo/logo-belle-croix-horizontal-white.svg" alt="Garage de la Belle Croix" className="h-11 w-fit" />
+          <div>
+            <p className="font-display text-6xl font-extrabold uppercase italic leading-[0.9]">
+              Espace
+              <br />
+              <span className="text-brand">garage.</span>
+            </p>
+            <p className="mt-4 max-w-sm text-white/60">Rendez-vous, devis, messages, offres et horaires du site, au même endroit.</p>
           </div>
-          
-          <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6">
+        </div>
+      </div>
+
+      {/* Formulaire */}
+      <div className="flex items-center justify-center bg-[#F5F5F3] p-6 lg:bg-white">
+        <div className="w-full max-w-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo/logo-belle-croix-horizontal-navy.svg" alt="Garage de la Belle Croix" className="mx-auto mb-10 h-10 lg:hidden" />
+          <h1 className="font-display text-4xl font-extrabold uppercase italic leading-none">Connexion</h1>
+          <p className="mt-2 text-sm text-gray-500">Accès réservé à l’équipe du garage.</p>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-bold mb-2 text-gray-700">
-                Email
-              </label>
+              <label htmlFor="email" className={adminLabel}>E-mail</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
-                  type="email"
                   id="email"
+                  type="email"
+                  autoComplete="username"
                   {...register('email', { required: 'Email requis' })}
-                  className="w-full border-2 border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
-                  placeholder="admin@garage-belle-croix.fr"
+                  className={`${adminInput} h-11 pl-9`}
+                  placeholder="vous@exemple.fr"
                 />
               </div>
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-bold mb-2 text-gray-700">
-                Mot de passe
-              </label>
+              <label htmlFor="password" className={adminLabel}>Mot de passe</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
-                  type="password"
                   id="password"
+                  type="password"
+                  autoComplete="current-password"
                   {...register('password', { required: 'Mot de passe requis' })}
-                  className="w-full border-2 border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
+                  className={`${adminInput} h-11 pl-9`}
                   placeholder="••••••••"
                 />
               </div>
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
-              )}
+              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-black text-white py-4 font-bold text-lg rounded-lg hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-            >
-              {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+            <button type="submit" disabled={isLoading} className={`${adminButton('accent')} h-11 w-full`}>
+              {isLoading ? 'Connexion…' : 'Se connecter'}
             </button>
           </form>
+
+          <a href="/" className="mt-8 block text-center text-sm text-gray-500 hover:text-ink">← Retour au site</a>
         </div>
       </div>
     </div>

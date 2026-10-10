@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { categoriesAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { ArrowUp, ArrowDown, GripVertical, Save } from 'lucide-react';
+import { ArrowUp, ArrowDown, Save } from 'lucide-react';
+import { AdminCard, AdminPageHeader, AdminSpinner, adminButton } from './admin/ui';
 
 interface Category {
   _id?: string;
@@ -64,68 +65,57 @@ export default function CategoryOrderManagement() {
 
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-        <p className="mt-4 text-gray-600">Chargement...</p>
-      </div>
+      <AdminCard>
+        <AdminSpinner />
+      </AdminCard>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-8">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h3 className="text-2xl font-black mb-2">Ordre des catégories</h3>
-          <p className="text-gray-600">Définissez l'ordre d'affichage des catégories sur le site</p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center gap-2 bg-black text-white px-6 py-3 font-black rounded-lg hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
-        >
-          <Save className="w-5 h-5" />
-          {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
-        </button>
-      </div>
+    <div>
+      <AdminPageHeader
+        title="Ordre des catégories"
+        subtitle="L’ordre dans lequel les catégories d’offres s’affichent sur la page Offres."
+        actions={
+          <button onClick={handleSave} disabled={isSaving} className={adminButton('accent')}>
+            <Save className="h-4 w-4" />
+            {isSaving ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        }
+      />
 
-      <div className="space-y-3">
-        {categories.map((category, index) => (
-          <div
-            key={category.category}
-            className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border-2 border-gray-200 hover:border-black transition-all"
-          >
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <GripVertical className="w-5 h-5 text-gray-400" />
-              <span className="text-sm font-black text-gray-500 w-8">#{index + 1}</span>
-            </div>
-            
-            <div className="flex-1">
-              <p className="font-black text-lg text-black">{category.label}</p>
-              <p className="text-sm text-gray-500">{category.category}</p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => moveCategory(index, 'up')}
-                disabled={index === 0}
-                className="p-2 bg-white border-2 border-gray-300 rounded-lg hover:border-black transition disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Déplacer vers le haut"
-              >
-                <ArrowUp className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => moveCategory(index, 'down')}
-                disabled={index === categories.length - 1}
-                className="p-2 bg-white border-2 border-gray-300 rounded-lg hover:border-black transition disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Déplacer vers le bas"
-              >
-                <ArrowDown className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <AdminCard className="max-w-2xl overflow-hidden">
+        <ol className="divide-y divide-gray-100">
+          {categories.map((category, index) => (
+            <li key={category.category} className="flex items-center gap-4 px-5 py-3.5">
+              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 font-display text-lg font-extrabold italic text-gray-500">
+                {index + 1}
+              </span>
+              <p className="flex-1 font-medium">{category.label}</p>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => moveCategory(index, 'up')}
+                  disabled={index === 0}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 hover:text-ink disabled:cursor-not-allowed disabled:opacity-30"
+                  title="Monter"
+                  aria-label={`Monter ${category.label}`}
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => moveCategory(index, 'down')}
+                  disabled={index === categories.length - 1}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 hover:text-ink disabled:cursor-not-allowed disabled:opacity-30"
+                  title="Descendre"
+                  aria-label={`Descendre ${category.label}`}
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </AdminCard>
     </div>
   );
 }
-

@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
@@ -62,7 +63,16 @@ app.use(cookieParser());
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
+  // L'admin connecté (jeton valide) n'est pas limité : le tableau de bord fait beaucoup de requêtes
+  skip: (req) => {
+    if (!req.cookies?.token) return false;
+    try {
+      return jwt.verify(req.cookies.token, process.env.JWT_SECRET).role === 'admin';
+    } catch {
+      return false;
+    }
+  }
 });
 app.use('/api/', limiter);
 

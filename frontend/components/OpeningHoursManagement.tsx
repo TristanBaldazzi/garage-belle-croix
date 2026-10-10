@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { openingHoursAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { Clock, Save, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, Save, Copy } from 'lucide-react';
+import { AdminCard, AdminPageHeader, AdminSpinner, EmptyState, adminButton, adminInput } from './admin/ui';
 
 const DAYS = [
   { key: 'monday', label: 'Lundi', short: 'Lun' },
@@ -78,111 +79,101 @@ export default function OpeningHoursManagement() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-        <p className="mt-4 text-gray-600">Chargement des horaires...</p>
-      </div>
-    );
-  }
+  // Recopie les horaires du lundi sur mardi → vendredi
+  const copyMondayToWeekdays = () => {
+    if (!hours) return;
+    const monday = hours.monday;
+    setHours({
+      ...hours,
+      tuesday: { ...monday },
+      wednesday: { ...monday },
+      thursday: { ...monday },
+      friday: { ...monday },
+    });
+    toast.success('Horaires du lundi copiés sur mardi → vendredi');
+  };
 
-  if (!hours) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-600">Erreur lors du chargement des horaires</p>
-      </div>
-    );
-  }
+  const saveButton = (
+    <button onClick={handleSave} disabled={isSaving || !hours} className={adminButton('accent')}>
+      <Save className="h-4 w-4" />
+      {isSaving ? 'Enregistrement…' : 'Enregistrer'}
+    </button>
+  );
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-8">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h3 className="text-2xl font-black mb-2">Horaires d'ouverture</h3>
-          <p className="text-gray-600">Gérez les horaires d'ouverture du garage</p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center gap-2 bg-black text-white px-6 py-3 font-black rounded-lg hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
-        >
-          <Save className="w-5 h-5" />
-          {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
-        </button>
-      </div>
+    <div>
+      <AdminPageHeader
+        title="Horaires d’ouverture"
+        subtitle="Utilisés partout : site, prise de rendez-vous en ligne et fiche lue par Google."
+        actions={saveButton}
+      />
 
-      <div className="space-y-4">
-        {DAYS.map((day) => {
-          const dayData = hours[day.key as keyof OpeningHours] as DayHours;
-          return (
-            <div
-              key={day.key}
-              className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200 hover:border-black transition-all"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-black to-gray-800 rounded-lg flex items-center justify-center shadow-md">
-                    <Clock className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-black text-black">{day.label}</h4>
-                    <p className="text-sm text-gray-500">{day.short}</p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={!dayData.isClosed}
-                    onChange={(e) => updateDay(day.key, 'isClosed', !e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-black/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-black"></div>
-                  <span className="ml-3 text-sm font-bold text-gray-700">
-                    {dayData.isClosed ? 'Fermé' : 'Ouvert'}
-                  </span>
-                </label>
-              </div>
-
-              {!dayData.isClosed && (
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label className="block text-xs font-black text-gray-500 uppercase mb-2">
-                      Heure d'ouverture
-                    </label>
+      {isLoading ? (
+        <AdminCard>
+          <AdminSpinner label="Chargement des horaires…" />
+        </AdminCard>
+      ) : !hours ? (
+        <AdminCard>
+          <EmptyState icon={Clock} title="Impossible de charger les horaires" text="Vérifiez que le serveur est bien démarré puis rechargez la page." />
+        </AdminCard>
+      ) : (
+        <AdminCard className="max-w-3xl overflow-hidden">
+          <div className="hidden grid-cols-[140px_150px_1fr] gap-4 border-b border-gray-100 bg-gray-50/60 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 sm:grid">
+            <span>Jour</span>
+            <span>Statut</span>
+            <span>Horaires</span>
+          </div>
+          <ul className="divide-y divide-gray-100">
+            {DAYS.map((day) => {
+              const dayHours = hours[day.key as keyof OpeningHours];
+              return (
+                <li key={day.key} className="grid grid-cols-1 items-center gap-3 px-5 py-3.5 sm:grid-cols-[140px_150px_1fr] sm:gap-4">
+                  <span className="font-semibold">{day.label}</span>
+                  <label className="flex w-fit cursor-pointer items-center gap-3">
                     <input
-                      type="time"
-                      value={dayData.open}
-                      onChange={(e) => updateDay(day.key, 'open', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none font-bold text-lg"
+                      type="checkbox"
+                      checked={!dayHours.isClosed}
+                      onChange={(e) => updateDay(day.key, 'isClosed', !e.target.checked)}
+                      className="peer sr-only"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black text-gray-500 uppercase mb-2">
-                      Heure de fermeture
-                    </label>
-                    <input
-                      type="time"
-                      value={dayData.close}
-                      onChange={(e) => updateDay(day.key, 'close', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none font-bold text-lg"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {dayData.isClosed && (
-                <div className="mt-4 p-4 bg-gray-100 rounded-lg text-center">
-                  <p className="text-sm text-gray-500 font-bold">Fermé ce jour</p>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                    <span className="relative h-6 w-11 rounded-full bg-gray-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-emerald-500 peer-checked:after:translate-x-5" />
+                    <span className={`text-sm font-medium ${dayHours.isClosed ? 'text-gray-400' : 'text-emerald-700'}`}>
+                      {dayHours.isClosed ? 'Fermé' : 'Ouvert'}
+                    </span>
+                  </label>
+                  {dayHours.isClosed ? (
+                    <span className="text-sm text-gray-400">—</span>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="time"
+                        value={dayHours.open}
+                        onChange={(e) => updateDay(day.key, 'open', e.target.value)}
+                        className={`${adminInput} w-[120px] font-medium tabular-nums`}
+                        aria-label={`${day.label} : ouverture`}
+                      />
+                      <span className="text-gray-400">→</span>
+                      <input
+                        type="time"
+                        value={dayHours.close}
+                        onChange={(e) => updateDay(day.key, 'close', e.target.value)}
+                        className={`${adminInput} w-[120px] font-medium tabular-nums`}
+                        aria-label={`${day.label} : fermeture`}
+                      />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 bg-gray-50/60 px-5 py-3.5">
+            <button onClick={copyMondayToWeekdays} className={adminButton('ghost', 'sm')}>
+              <Copy className="h-4 w-4" /> Copier le lundi sur mardi → vendredi
+            </button>
+            {saveButton}
+          </div>
+        </AdminCard>
+      )}
     </div>
   );
 }
-
-
-

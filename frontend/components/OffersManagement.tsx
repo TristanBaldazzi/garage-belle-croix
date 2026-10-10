@@ -5,8 +5,9 @@ import { useForm } from 'react-hook-form';
 import { offersAPI, getOfferImageUrl } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { Plus, Edit, Trash2, X, Save, Package, Image as ImageIcon, Upload, ChevronDown, Check, Minus } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, Package, Image as ImageIcon, Upload, Check } from 'lucide-react';
 import Image from 'next/image';
+import { AdminCard, AdminPageHeader, AdminSpinner, Badge, EmptyState, IconButton, adminButton, adminInput, adminLabel } from './admin/ui';
 
 interface Offer {
   _id: string;
@@ -58,7 +59,6 @@ export default function OffersManagement() {
     { value: 'autre', label: 'Autre' },
   ];
 
-  const selectedCategory = categories.find(cat => cat.value === watch('category'));
 
   useEffect(() => {
     loadOffers();
@@ -168,347 +168,206 @@ export default function OffersManagement() {
     setShowForm(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-        <p className="mt-4 text-gray-600">Chargement des offres...</p>
-      </div>
-    );
-  }
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingOffer(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+    setIsCategoryOpen(false);
+    reset();
+  };
+
+  const categoryLabel = (value: string) => categories.find((c) => c.value === value)?.label || value;
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h2 className="text-3xl font-bold mb-2">Gestion des offres</h2>
-          <p className="text-gray-600">Créez et gérez vos offres et promotions</p>
-        </div>
-        <button
-          onClick={handleNewOffer}
-          className="flex items-center gap-2 bg-black text-white px-6 py-3 font-bold rounded-lg hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl"
-        >
-          <Plus className="w-5 h-5" />
-          Nouvelle offre
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Offres"
+        subtitle="Les promotions affichées sur l’accueil et la page Offres du site."
+        actions={
+          !showForm && (
+            <button onClick={handleNewOffer} className={adminButton('accent')}>
+              <Plus className="h-4 w-4" /> Nouvelle offre
+            </button>
+          )
+        }
+      />
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-8 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold">
-              {editingOffer ? 'Modifier l\'offre' : 'Nouvelle offre'}
-            </h3>
-            <button
-              type="button"
-              onClick={() => {
-                setShowForm(false);
-                setEditingOffer(null);
-                setSelectedImage(null);
-                setImagePreview(null);
-                setIsCategoryOpen(false);
-                reset();
-              }}
-              className="text-gray-400 hover:text-gray-600 transition"
-            >
-              <X className="w-6 h-6" />
-            </button>
+        <AdminCard className="mb-6">
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <h3 className="font-semibold">{editingOffer ? 'Modifier l’offre' : 'Nouvelle offre'}</h3>
+            <IconButton icon={X} label="Fermer" onClick={closeForm} />
           </div>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
+            <div className="space-y-5 lg:col-span-2">
               <div>
-                <label className="block text-sm font-bold mb-2">Titre *</label>
-                <input
-                  type="text"
-                  {...register('title', { required: 'Titre requis' })}
-                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
-                />
-                {errors.title && (
-                  <p className="text-red-500 text-sm">{errors.title.message}</p>
-                )}
+                <label className={adminLabel}>Titre *</label>
+                <input type="text" {...register('title', { required: 'Titre requis' })} className={adminInput} placeholder="Ex : Vidange + filtre à huile" />
+                {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
               </div>
+
               <div>
-                <label className="block text-sm font-black mb-2 uppercase tracking-wide text-gray-700">Catégorie *</label>
-                <div className="relative">
-                  <input
-                    type="hidden"
-                    {...register('category', { required: 'Catégorie requise' })}
-                  />
+                <label className={adminLabel}>Catégorie *</label>
+                <input type="hidden" {...register('category', { required: 'Catégorie requise' })} />
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((category) => {
+                    const active = watch('category') === category.value;
+                    return (
+                      <button
+                        key={category.value}
+                        type="button"
+                        onClick={() => setValue('category', category.value, { shouldValidate: true })}
+                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                          active ? 'border-ink bg-ink text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                        }`}
+                      >
+                        {active && <Check className="h-3.5 w-3.5" />}
+                        {category.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.category && <p className="mt-1 text-xs text-red-600">{errors.category.message}</p>}
+              </div>
+
+              <div>
+                <label className={adminLabel}>Description *</label>
+                <textarea
+                  rows={4}
+                  {...register('description', { required: 'Description requise' })}
+                  className={`${adminInput} h-auto resize-none py-2.5`}
+                  placeholder="Ce qui est inclus, conditions…"
+                />
+                {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label className={adminLabel}>Prix (€) *</label>
+                  <input type="number" step="0.01" {...register('price', { required: 'Prix requis', min: 0 })} className={adminInput} />
+                  <p className="mt-1 text-xs text-gray-400">0 = affiché « Offert »</p>
+                </div>
+                <div>
+                  <label className={adminLabel}>Prix barré (€)</label>
+                  <input type="number" step="0.01" {...register('originalPrice', { min: 0 })} className={adminInput} />
+                  <p className="mt-1 text-xs text-gray-400">Vide si pas de promo</p>
+                </div>
+                <div>
+                  <label className={adminLabel}>Valable jusqu’au</label>
+                  <input type="date" {...register('validUntil')} className={adminInput} />
+                  <p className="mt-1 text-xs text-gray-400">Masquée après cette date</p>
+                </div>
+              </div>
+
+              <label className="flex w-fit cursor-pointer items-center gap-3">
+                <input type="checkbox" {...register('isActive')} className="peer sr-only" />
+                <span className="relative h-6 w-11 rounded-full bg-gray-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-emerald-500 peer-checked:after:translate-x-5" />
+                <span className="text-sm font-medium">{watch('isActive') ? 'Visible sur le site' : 'Masquée du site'}</span>
+              </label>
+            </div>
+
+            <div>
+              <label className={adminLabel}>Photo</label>
+              {imagePreview ? (
+                <div className="relative aspect-[16/10] overflow-hidden rounded-lg border border-gray-200">
+                  <Image src={imagePreview} alt="Aperçu" fill className="object-cover" />
                   <button
                     type="button"
-                    onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                    className={`w-full border-2 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-black transition-all bg-white font-bold text-black cursor-pointer hover:border-gray-300 hover:shadow-sm ${
-                      isCategoryOpen ? 'border-black shadow-md' : 'border-gray-200'
-                    } ${errors.category ? 'border-red-500' : ''}`}
+                    onClick={() => {
+                      setImagePreview(null);
+                      setSelectedImage(null);
+                    }}
+                    className="absolute right-2 top-2 rounded-lg bg-black/70 p-1.5 text-white transition hover:bg-black"
+                    aria-label="Retirer la photo"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className={selectedCategory ? 'text-black' : 'text-gray-400'}>
-                        {selectedCategory ? selectedCategory.label : 'Sélectionner une catégorie'}
-                      </span>
-                      <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
-                    </div>
+                    <X className="h-4 w-4" />
                   </button>
-                  
-                  {isCategoryOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setIsCategoryOpen(false)}
-                      ></div>
-                      <div className="absolute z-20 w-full mt-2 bg-white border-2 border-black rounded-lg shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                        {categories.map((category, index) => (
-                          <button
-                            key={category.value}
-                            type="button"
-                            onClick={() => {
-                              setValue('category', category.value);
-                              setIsCategoryOpen(false);
-                            }}
-                            className={`w-full px-4 py-3.5 text-left font-bold transition-all flex items-center justify-between group ${
-                              watch('category') === category.value
-                                ? 'bg-black text-white'
-                                : 'text-black hover:bg-gray-50 hover:pl-5'
-                            } ${index < categories.length - 1 ? 'border-b border-gray-200' : ''}`}
-                          >
-                            <span className="transition-all">{category.label}</span>
-                            {watch('category') === category.value ? (
-                              <Check className="w-5 h-5 text-white" />
-                            ) : (
-                              <div className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <ChevronDown className="w-5 h-5 text-gray-400 rotate-[-90deg]" />
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
                 </div>
-                {errors.category && (
-                  <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold mb-2">Description *</label>
-              <textarea
-                rows={4}
-                {...register('description', { required: 'Description requise' })}
-                className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition resize-none"
-              />
-              {errors.description && (
-                <p className="text-red-500 text-sm">{errors.description.message}</p>
-              )}
-            </div>
-
-            {/* Image Upload */}
-            <div>
-              <label className="block text-sm font-bold mb-2">Image</label>
-              <div className="space-y-4">
-                {imagePreview && (
-                  <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-200">
-                    <Image
-                      src={imagePreview}
-                      alt="Preview"
-                      fill
-                      className="object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImagePreview(null);
-                        setSelectedImage(null);
-                      }}
-                      className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-lg hover:bg-black transition"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                    <p className="mb-2 text-sm text-gray-500">
-                      <span className="font-semibold">Cliquez pour uploader</span> ou glissez-déposez
-                    </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 5MB)</p>
-                  </div>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                  />
+              ) : (
+                <label className="flex aspect-[16/10] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 px-4 text-center transition hover:border-gray-300 hover:bg-gray-100">
+                  <Upload className="mb-2 h-6 w-6 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">Ajouter une photo</span>
+                  <span className="mt-1 text-xs text-gray-400">PNG, JPG, WEBP · 5 Mo max</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
                 </label>
-              </div>
+              )}
+              <p className="mt-2 text-xs text-gray-400">Sans photo, une image adaptée à la catégorie est utilisée.</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Prix (€) *</label>
-                  <input
-                  type="number"
-                  step="0.01"
-                  {...register('price', { required: 'Prix requis', min: 0 })}
-                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Prix original (€)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  {...register('originalPrice', { min: 0 })}
-                  className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
-                />
-                <p className="text-xs text-gray-500 mt-1">Laissez vide si pas de promotion</p>
-              </div>
-              <div className="flex items-end">
-                <div className="w-full">
-                  <label className="block text-sm font-black mb-2 uppercase tracking-wide text-gray-700">Statut</label>
-                  <label className="relative inline-flex items-center cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      {...register('isActive')}
-                      className="sr-only peer"
-                    />
-                    <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-black/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-black shadow-md"></div>
-                    <span className="ml-3 text-sm font-black text-gray-700 group-hover:text-black transition-colors">
-                      {watch('isActive') ? 'Active' : 'Inactive'}
-                    </span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="max-w-xs">
-              <label className="block text-sm font-bold mb-2">Valable jusqu'au</label>
-              <input
-                type="date"
-                {...register('validUntil')}
-                className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
-              />
-              <p className="text-xs text-gray-500 mt-1">Optionnel : l'offre disparaît du site après cette date</p>
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <button
-                type="submit"
-                disabled={isUploading}
-                className="flex items-center gap-2 bg-black text-white px-6 py-3 font-bold rounded-lg hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Save className="w-5 h-5" />
-                {isUploading ? 'Enregistrement...' : (editingOffer ? 'Modifier' : 'Créer')}
+            <div className="flex gap-2 border-t border-gray-100 pt-5 lg:col-span-3">
+              <button type="submit" disabled={isUploading} className={adminButton('primary')}>
+                <Save className="h-4 w-4" />
+                {isUploading ? 'Enregistrement…' : editingOffer ? 'Enregistrer' : 'Créer l’offre'}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingOffer(null);
-                  setIsCategoryOpen(false);
-                  reset();
-                }}
-                className="flex items-center gap-2 bg-gray-200 text-black px-6 py-3 font-bold rounded-lg hover:bg-gray-300 transition-all duration-300"
-              >
-                <X className="w-5 h-5" />
+              <button type="button" onClick={closeForm} className={adminButton('secondary')}>
                 Annuler
               </button>
             </div>
           </form>
-        </div>
+        </AdminCard>
       )}
 
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-black text-white">
-              <tr>
-                <th className="px-6 py-4 text-left font-bold">Titre</th>
-                <th className="px-6 py-4 text-left font-bold">Catégorie</th>
-                <th className="px-6 py-4 text-left font-bold">Prix</th>
-                <th className="px-6 py-4 text-left font-bold">Promotion</th>
-                <th className="px-6 py-4 text-left font-bold">Statut</th>
-                <th className="px-6 py-4 text-left font-bold">Date</th>
-                <th className="px-6 py-4 text-left font-bold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {offers.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
-                    <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p>Aucune offre pour le moment</p>
-                  </td>
-                </tr>
-              ) : (
-                offers.map((offer) => (
-                  <tr key={offer._id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-bold">{offer.title}</td>
-                    <td className="px-6 py-4">
-                      <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold uppercase">
-                        {offer.category}
+      <AdminCard className="overflow-hidden">
+        {isLoading ? (
+          <AdminSpinner label="Chargement des offres…" />
+        ) : offers.length === 0 ? (
+          <EmptyState icon={Package} title="Aucune offre" text="Créez une première offre pour l’afficher sur le site." />
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {offers.map((offer) => {
+              const expired = !!offer.validUntil && new Date(offer.validUntil) < new Date(new Date().toDateString());
+              return (
+                <li key={offer._id} className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center">
+                  <div className="relative h-16 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                    {offer.image ? (
+                      <Image src={getOfferImageUrl(offer.image)} alt="" fill sizes="96px" className="object-cover" />
+                    ) : (
+                      <span className="flex h-full items-center justify-center">
+                        <ImageIcon className="h-5 w-5 text-gray-300" />
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        {offer.originalPrice && (
-                          <span className="text-gray-400 line-through mr-2">
-                            {offer.originalPrice.toFixed(2)}€
-                          </span>
-                        )}
-                        <span className="font-bold text-lg">{offer.price.toFixed(2)}€</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {offer.isPromotion ? (
-                        <span className="bg-black text-white px-3 py-1 rounded-lg text-sm font-bold">
-                          -{offer.promotionPercentage}%
-                        </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate font-semibold">{offer.title}</p>
+                      <Badge tone="neutral">{categoryLabel(offer.category)}</Badge>
+                      {!offer.isActive ? (
+                        <Badge tone="muted">Masquée</Badge>
+                      ) : expired ? (
+                        <Badge tone="warning">Expirée</Badge>
                       ) : (
-                        <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg border border-gray-200">
-                          <Minus className="w-4 h-4 text-gray-400" strokeWidth={3} />
-                        </div>
+                        <Badge tone="success">En ligne</Badge>
                       )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        offer.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {offer.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {format(new Date(offer.createdAt), 'dd/MM/yyyy')}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEdit(offer)}
-                          className="flex items-center gap-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-blue-600 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                          Modifier
-                        </button>
-                        <button
-                          onClick={() => handleDelete(offer._id)}
-                          className="flex items-center gap-1 bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-red-600 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Supprimer
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {offer.validUntil ? `Jusqu’au ${format(new Date(offer.validUntil), 'dd/MM/yyyy')}` : 'Sans date de fin'}
+                      {' · '}créée le {format(new Date(offer.createdAt), 'dd/MM/yyyy')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      {offer.isPromotion && offer.originalPrice ? (
+                        <p className="text-xs text-gray-400">
+                          <span className="line-through">{offer.originalPrice.toFixed(2)} €</span>
+                          <span className="ml-1.5 font-semibold text-brand">-{offer.promotionPercentage}%</span>
+                        </p>
+                      ) : null}
+                      <p className="font-display text-2xl font-extrabold italic leading-none">
+                        {offer.price === 0 ? 'Offert' : `${offer.price.toFixed(2)} €`}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <IconButton icon={Edit} label="Modifier" onClick={() => handleEdit(offer)} />
+                      <IconButton icon={Trash2} label="Supprimer" tone="danger" onClick={() => handleDelete(offer._id)} />
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </AdminCard>
     </div>
   );
 }
-

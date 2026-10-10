@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { quotesAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import { FileText, Archive, Trash2, CheckCircle, XCircle, Filter, Search, Tag } from 'lucide-react';
+import { FileText, Archive, Trash2, CheckCircle, Search, Phone, Reply, Car, Bike } from 'lucide-react';
+import { scrollToDetailOnMobile, AdminCard, AdminPageHeader, AdminSpinner, Badge, DetailField, EmptyState, FilterTabs, IconButton, adminButton, adminInput } from './admin/ui';
+import { useRefreshAdminCounts } from './admin/counts';
 
 interface QuoteRequest {
   _id: string;
@@ -35,6 +37,7 @@ export default function QuotesManagement() {
   const [filter, setFilter] = useState<'all' | 'unread' | 'archived'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedQuote, setSelectedQuote] = useState<QuoteRequest | null>(null);
+  const refreshCounts = useRefreshAdminCounts();
 
   useEffect(() => {
     loadQuotes();
@@ -55,6 +58,7 @@ export default function QuotesManagement() {
       }
       const data = await quotesAPI.getAll(params);
       setQuotes(data);
+      refreshCounts();
     } catch (error) {
       toast.error('Erreur lors du chargement des demandes de devis');
     } finally {
@@ -99,288 +103,181 @@ export default function QuotesManagement() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-        <p className="mt-4 text-gray-600">Chargement des demandes de devis...</p>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h2 className="text-3xl font-black mb-2">Demandes de devis</h2>
-          <p className="text-gray-600">Demandes de devis liées aux offres et devis libres (pneus, moto, auto)</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none w-64"
-            />
-          </div>
-          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-md font-bold text-sm transition-all ${
-                filter === 'all'
-                  ? 'bg-black text-white'
-                  : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Tous
-            </button>
-            <button
-              onClick={() => setFilter('unread')}
-              className={`px-4 py-2 rounded-md font-bold text-sm transition-all ${
-                filter === 'unread'
-                  ? 'bg-black text-white'
-                  : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Non lus
-            </button>
-            <button
-              onClick={() => setFilter('archived')}
-              className={`px-4 py-2 rounded-md font-bold text-sm transition-all ${
-                filter === 'archived'
-                  ? 'bg-black text-white'
-                  : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Archivés
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Liste des demandes */}
-        <div className="lg:col-span-2 space-y-3">
-          {quotes.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-12 text-center">
-              <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-xl font-black text-gray-500 mb-2">Aucune demande de devis</p>
-              <p className="text-gray-400">Les demandes de devis apparaîtront ici</p>
+      <AdminPageHeader
+        title="Devis"
+        subtitle="Demandes de devis libres et demandes liées à une offre du site."
+        actions={
+          <>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Rechercher…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`${adminInput} w-64 pl-9`}
+              />
             </div>
+            <FilterTabs
+              value={filter}
+              onChange={(f) => {
+                setFilter(f);
+                setSelectedQuote(null);
+              }}
+              options={[
+                { id: 'all', label: 'Tous' },
+                { id: 'unread', label: 'Non lus' },
+                { id: 'archived', label: 'Archivés' },
+              ]}
+            />
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
+        <AdminCard className="overflow-hidden lg:col-span-3">
+          {isLoading && quotes.length === 0 ? (
+            <AdminSpinner label="Chargement des devis…" />
+          ) : quotes.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title={searchTerm ? 'Aucun résultat' : 'Aucune demande de devis'}
+              text={searchTerm ? 'Essayez un autre nom, e-mail ou plaque.' : 'Les demandes de devis faites sur le site apparaîtront ici.'}
+            />
           ) : (
-            quotes.map((quote) => (
-              <div
-                key={quote._id}
-                onClick={() => setSelectedQuote(quote)}
-                className={`bg-white rounded-lg shadow-md border-2 cursor-pointer transition-all hover:shadow-xl ${
-                  selectedQuote?._id === quote._id
-                    ? 'border-black'
-                    : quote.isRead
-                    ? 'border-gray-200'
-                    : 'border-black'
-                } ${!quote.isRead ? 'bg-gray-50' : ''}`}
-              >
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-black text-lg text-black">{quote.name}</h3>
-                        {!quote.isRead && (
-                          <span className="bg-black text-white text-xs font-black px-2 py-0.5 rounded">
-                            Nouveau
+            <ul className={`divide-y divide-gray-100 transition-opacity ${isLoading ? 'opacity-60' : ''}`}>
+              {quotes.map((quote) => {
+                const isSelected = selectedQuote?._id === quote._id;
+                const VehicleIcon = quote.vehicleType === 'moto' ? Bike : Car;
+                return (
+                  <li key={quote._id}>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedQuote(quote); scrollToDetailOnMobile(); }}
+                      className={`relative block w-full px-5 py-4 text-left transition-colors ${isSelected ? 'bg-gray-50' : 'hover:bg-gray-50/70'}`}
+                    >
+                      {isSelected && <span className="absolute inset-y-0 left-0 w-[3px] bg-brand" />}
+                      <span className="flex items-center justify-between gap-3">
+                        <span className="flex min-w-0 items-center gap-2">
+                          {!quote.isRead && <span className="h-2 w-2 flex-shrink-0 rounded-full bg-brand" />}
+                          <span className={`truncate ${quote.isRead ? 'font-medium' : 'font-bold'}`}>{quote.name}</span>
+                          {quote.offerTitle && <Badge tone="brand">Offre</Badge>}
+                        </span>
+                        <span className="flex-shrink-0 text-xs text-gray-400">{format(new Date(quote.createdAt), 'dd/MM HH:mm')}</span>
+                      </span>
+                      <span className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                        <span className="flex items-center gap-1.5">
+                          <VehicleIcon className="h-4 w-4 text-gray-400" />
+                          {quote.offerTitle || quote.service}
+                        </span>
+                        {quote.tireSize && (
+                          <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs font-semibold text-ink">
+                            {quote.tireSize}
+                            {quote.tireQuantity ? ` ×${quote.tireQuantity}` : ''}
                           </span>
                         )}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">{quote.email}</p>
-                      <div className="flex items-center gap-3 text-sm mb-2">
-                        <div className="flex items-center gap-2 text-gray-500">
-                          <Tag className="w-4 h-4" />
-                          <span className="font-bold">{quote.offerTitle || quote.service}</span>
-                        </div>
-                        {quote.tireSize && (
-                          <div className="bg-gray-100 px-2 py-1 rounded font-mono font-bold text-black">
-                            {quote.tireSize}{quote.tireQuantity ? ` ×${quote.tireQuantity}` : ''}
-                          </div>
-                        )}
                         {quote.licensePlate && (
-                          <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded font-black text-black">
-                            {quote.vehicleType === 'moto' ? '🏍️' : '🚗'} {quote.licensePlate}
-                          </div>
+                          <span className="rounded border border-gray-300 px-1.5 py-0.5 font-mono text-xs font-bold tracking-wider text-ink">{quote.licensePlate}</span>
                         )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-400">
-                        {format(new Date(quote.createdAt), 'dd/MM/yyyy HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600 line-clamp-2">{quote.message}</p>
-                </div>
-              </div>
-            ))
+                      </span>
+                      <span className="mt-1 line-clamp-1 text-sm text-gray-400">{quote.message}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
-        </div>
+        </AdminCard>
 
-        {/* Détails de la demande sélectionnée */}
-        <div className="lg:col-span-1">
+        <div id="admin-detail" className="scroll-mt-20 lg:sticky lg:top-6 lg:col-span-2">
           {selectedQuote ? (
-            <div className="bg-white rounded-lg shadow-md border-2 border-gray-200 p-6 sticky top-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-black">Détails</h3>
-                <div className="flex items-center gap-2">
-                  {!selectedQuote.isRead && (
-                    <button
-                      onClick={() => handleMarkAsRead(selectedQuote._id)}
-                      className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
-                      title="Marquer comme lu"
-                    >
-                      <CheckCircle className="w-5 h-5 text-gray-600" />
-                    </button>
-                  )}
-                  {!selectedQuote.isArchived && (
-                    <button
-                      onClick={() => handleArchive(selectedQuote._id)}
-                      className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
-                      title="Archiver"
-                    >
-                      <Archive className="w-5 h-5 text-gray-600" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(selectedQuote._id)}
-                    className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition"
-                    title="Supprimer"
-                  >
-                    <Trash2 className="w-5 h-5 text-red-600" />
-                  </button>
+            <AdminCard>
+              <div className="flex items-start justify-between gap-3 border-b border-gray-100 p-5">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-lg font-semibold">{selectedQuote.name}</p>
+                    {!selectedQuote.isRead && <Badge tone="new">Nouveau</Badge>}
+                  </div>
+                  <p className="mt-0.5 text-sm text-gray-500">Reçu le {format(new Date(selectedQuote.createdAt), "dd/MM/yyyy 'à' HH:mm")}</p>
+                </div>
+                <div className="flex flex-shrink-0 gap-2">
+                  {!selectedQuote.isArchived && <IconButton icon={Archive} label="Archiver" onClick={() => handleArchive(selectedQuote._id)} />}
+                  <IconButton icon={Trash2} label="Supprimer" tone="danger" onClick={() => handleDelete(selectedQuote._id)} />
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                    Nom
-                  </label>
-                  <p className="text-lg font-black">{selectedQuote.name}</p>
+              <div className="space-y-5 p-5">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                    {selectedQuote.offerTitle ? 'Offre concernée' : 'Prestation'}
+                  </p>
+                  <p className="mt-1 font-semibold">{selectedQuote.offerTitle || selectedQuote.service}</p>
+                  {selectedQuote.offerId?.price !== undefined && selectedQuote.offerTitle && (
+                    <p className="mt-0.5 text-sm text-gray-600">Prix affiché : {selectedQuote.offerId.price.toFixed(2)} €</p>
+                  )}
+                  {!selectedQuote.offerTitle && (
+                    <p className="mt-0.5 text-sm text-gray-600">
+                      {selectedQuote.vehicleType === 'moto' ? 'Moto' : 'Voiture'}
+                      {selectedQuote.vehicle && ` — ${selectedQuote.vehicle}`}
+                    </p>
+                  )}
+                  {selectedQuote.tireSize && (
+                    <p className="mt-1.5 font-mono text-sm font-semibold">
+                      Pneus : {selectedQuote.tireSize}
+                      {selectedQuote.tireQuantity ? ` (×${selectedQuote.tireQuantity})` : ''}
+                    </p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                    Email
-                  </label>
-                  <a
-                    href={`mailto:${selectedQuote.email}`}
-                    className="text-lg text-black hover:underline font-bold"
-                  >
-                    {selectedQuote.email}
-                  </a>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <DetailField label="E-mail">
+                    <a href={`mailto:${selectedQuote.email}`} className="break-all font-medium hover:text-brand">{selectedQuote.email}</a>
+                  </DetailField>
+                  {selectedQuote.phone && (
+                    <DetailField label="Téléphone">
+                      <a href={`tel:${selectedQuote.phone}`} className="font-medium hover:text-brand">{selectedQuote.phone}</a>
+                    </DetailField>
+                  )}
+                  {selectedQuote.licensePlate && (
+                    <DetailField label="Immatriculation">
+                      <span className="inline-block rounded border border-gray-300 bg-white px-2 py-0.5 font-mono font-bold tracking-wider">{selectedQuote.licensePlate}</span>
+                    </DetailField>
+                  )}
                 </div>
 
+                <DetailField label="Message">
+                  <p className="whitespace-pre-wrap rounded-lg bg-gray-50 p-3 leading-relaxed text-gray-700">{selectedQuote.message}</p>
+                </DetailField>
+              </div>
+
+              <div className="flex flex-wrap gap-2 border-t border-gray-100 p-5">
+                <a
+                  href={`mailto:${selectedQuote.email}?subject=${encodeURIComponent(`Re: Demande de devis - ${selectedQuote.offerTitle || selectedQuote.service || ''}`)}`}
+                  className={adminButton('primary')}
+                >
+                  <Reply className="h-4 w-4" /> Répondre
+                </a>
                 {selectedQuote.phone && (
-                  <div>
-                    <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                      Téléphone
-                    </label>
-                    <a
-                      href={`tel:${selectedQuote.phone}`}
-                      className="text-lg text-black hover:underline font-bold"
-                    >
-                      {selectedQuote.phone}
-                    </a>
-                  </div>
+                  <a href={`tel:${selectedQuote.phone}`} className={adminButton('secondary')}>
+                    <Phone className="h-4 w-4" /> Appeler
+                  </a>
                 )}
-
-                {selectedQuote.licensePlate && (
-                  <div>
-                    <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                      Plaque d'immatriculation
-                    </label>
-                    <div className="bg-gray-100 p-3 rounded-lg">
-                      <p className="font-black text-lg text-black">{selectedQuote.licensePlate}</p>
-                    </div>
-                  </div>
+                {!selectedQuote.isRead && (
+                  <button onClick={() => handleMarkAsRead(selectedQuote._id)} className={adminButton('ghost')}>
+                    <CheckCircle className="h-4 w-4" /> Marquer comme lu
+                  </button>
                 )}
-
-                {selectedQuote.offerTitle ? (
-                  <div>
-                    <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                      Offre concernée
-                    </label>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="font-black text-black">{selectedQuote.offerTitle}</p>
-                      {selectedQuote.offerId?.price && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          Prix: {selectedQuote.offerId.price.toFixed(2)}€
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                      Prestation
-                    </label>
-                    <div className="bg-gray-50 p-3 rounded-lg space-y-1">
-                      <p className="font-black text-black">{selectedQuote.service}</p>
-                      <p className="text-sm text-gray-600">
-                        {selectedQuote.vehicleType === 'moto' ? 'Moto' : 'Voiture'}
-                        {selectedQuote.vehicle && ` — ${selectedQuote.vehicle}`}
-                      </p>
-                      {selectedQuote.tireSize && (
-                        <p className="text-sm font-mono font-bold">
-                          Pneus : {selectedQuote.tireSize}{selectedQuote.tireQuantity ? ` (×${selectedQuote.tireQuantity})` : ''}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                    Message
-                  </label>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {selectedQuote.message}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-black text-gray-500 uppercase mb-1 block">
-                    Date
-                  </label>
-                  <p className="text-gray-600">
-                    {format(new Date(selectedQuote.createdAt), 'dd/MM/yyyy à HH:mm')}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={`mailto:${selectedQuote.email}?subject=Re: Demande de devis - ${selectedQuote.offerTitle || selectedQuote.service || ''}`}
-                      className="flex-1 bg-black text-white px-4 py-2 rounded-lg font-black text-center hover:bg-gray-800 transition"
-                    >
-                      Répondre
-                    </a>
-                  </div>
-                </div>
               </div>
-            </div>
+            </AdminCard>
           ) : (
-            <div className="bg-white rounded-lg shadow-md border-2 border-gray-200 p-12 text-center">
-              <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 font-black">Sélectionnez une demande</p>
-              <p className="text-sm text-gray-400 mt-2">
-                Cliquez sur une demande pour voir les détails
-              </p>
-            </div>
+            <AdminCard className="hidden lg:block">
+              <EmptyState icon={FileText} title="Aucune demande sélectionnée" text="Cliquez sur une demande pour voir le détail." />
+            </AdminCard>
           )}
         </div>
       </div>
     </div>
   );
 }
-
