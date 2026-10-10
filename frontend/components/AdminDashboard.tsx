@@ -36,9 +36,26 @@ const NAV: { group: string; items: { id: Tab; label: string; Icon: LucideIcon; c
 
 type Counts = { appointments: number; quotes: number; contacts: number };
 
+// Onglet mémorisé dans l'adresse (/admin#devis) pour le retrouver après un rafraîchissement
+const TAB_HASH: Record<Tab, string> = {
+  appointments: 'rendez-vous',
+  quotes: 'devis',
+  contacts: 'messages',
+  offers: 'offres',
+  categories: 'categories',
+  hours: 'horaires',
+};
+
+const tabFromHash = (): Tab => {
+  if (typeof window === 'undefined') return 'appointments';
+  const hash = window.location.hash.replace('#', '');
+  const found = (Object.keys(TAB_HASH) as Tab[]).find((tab) => TAB_HASH[tab] === hash);
+  return found || 'appointments';
+};
+
 export default function AdminDashboard() {
   const { logout, user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<Tab>('appointments');
+  const [activeTab, setActiveTab] = useState<Tab>(tabFromHash);
   const [counts, setCounts] = useState<Counts>({ appointments: 0, quotes: 0, contacts: 0 });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -73,8 +90,16 @@ export default function AdminDashboard() {
     }
   };
 
+  // Boutons précédent / suivant du navigateur
+  useEffect(() => {
+    const onHashChange = () => setActiveTab(tabFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   const goTo = (tab: Tab) => {
     setActiveTab(tab);
+    if (window.location.hash !== `#${TAB_HASH[tab]}`) window.location.hash = TAB_HASH[tab];
     setIsMenuOpen(false);
     refreshCounts();
   };

@@ -3,7 +3,7 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://www.garagebellecroix.fr/sitemap.xml
+Sitemap: https://garagebellecroix.fr/sitemap.xml
 
 
 

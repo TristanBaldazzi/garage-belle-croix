@@ -5,6 +5,7 @@ import Script from 'next/script'
 import { Toaster } from 'react-hot-toast'
 import { SITE } from '@/lib/site'
 import { getOpeningHours } from '@/lib/server-data'
+import { getSlots } from '@/lib/hours'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const barlow = Barlow({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-barlow' })
@@ -16,12 +17,12 @@ const barlowCondensed = Barlow_Condensed({
 })
 
 const DEFAULT_DESCRIPTION =
-  'Garage automobile indépendant à Ennery, entre Metz et Thionville : entretien, réparation, freinage, pneus et vidange toutes marques. Devis gratuit, prix annoncé avant intervention. 06 09 36 94 90.'
+  'Garage auto à Ennery, entre Metz et Thionville : entretien, réparation, pneus et vidange. Devis gratuit, prix annoncé avant intervention.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: 'Garage de la Belle Croix - Garage automobile à Ennery (Metz-Thionville)',
+    default: 'Garage automobile à Ennery | Garage de la Belle Croix',
     template: '%s | Garage de la Belle Croix',
   },
   description: DEFAULT_DESCRIPTION,
@@ -96,13 +97,15 @@ const buildLocalBusinessJsonLd = (hours: Awaited<ReturnType<typeof getOpeningHou
   currenciesAccepted: 'EUR',
   ...(hours && {
     openingHoursSpecification: Object.entries(SCHEMA_DAYS)
-      .filter(([key]) => hours[key] && !hours[key].isClosed)
-      .map(([key, day]) => ({
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: `https://schema.org/${day}`,
-        opens: hours[key].open,
-        closes: hours[key].close,
-      })),
+      // Une entrée par plage : horaires coupés (8h-12h / 14h-18h) bien décrits pour Google
+      .flatMap(([key, day]) =>
+        getSlots(hours[key]).map((slot) => ({
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: `https://schema.org/${day}`,
+          opens: slot.open,
+          closes: slot.close,
+        }))
+      ),
   }),
   hasOfferCatalog: {
     '@type': 'OfferCatalog',

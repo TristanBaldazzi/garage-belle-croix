@@ -13,19 +13,22 @@ export const processImage = async (filePath) => {
     const name = path.basename(filePath, ext);
     const outputPath = path.join(dir, name + '.jpg');
     
-    // Redimensionner et convertir en JPEG optimisé
-    await sharp(filePath)
+    // Redimensionner et convertir en JPEG optimisé.
+    // Traitement en mémoire : pour un .jpg, l'entrée et la sortie ont le même nom
+    // (sharp refuse d'écrire directement dans le fichier qu'il lit).
+    const buffer = await sharp(filePath)
+      .rotate() // applique l'orientation EXIF des photos d'appareil / téléphone
       .resize(1200, 800, {
         fit: 'inside',
         withoutEnlargement: true
       })
       .jpeg({ quality: 85, mozjpeg: true })
-      .toFile(outputPath);
-    
-    // Supprimer l'original si ce n'est pas déjà un JPEG
-    if (ext !== '.jpg' && ext !== '.jpeg') {
-      fs.unlinkSync(filePath);
-    } else if (filePath !== outputPath) {
+      .toBuffer();
+
+    fs.writeFileSync(outputPath, buffer);
+
+    // Supprimer l'original s'il avait une autre extension (.png, .webp, .jpeg)
+    if (filePath !== outputPath) {
       fs.unlinkSync(filePath);
     }
     

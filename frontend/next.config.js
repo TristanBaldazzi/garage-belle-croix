@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Ne pas annoncer la techno du serveur (en-tête X-Powered-By)
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {

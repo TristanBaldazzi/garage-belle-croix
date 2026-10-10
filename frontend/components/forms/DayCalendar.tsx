@@ -2,12 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { lastClose, nowTime, type DayHours as SharedDayHours } from '@/lib/hours';
 
-interface DayHours {
-  open: string;
-  close: string;
-  isClosed: boolean;
-}
+type DayHours = SharedDayHours;
 
 // Index = Date.getDay() (0 = dimanche)
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
@@ -42,12 +39,8 @@ export default function DayCalendar({
     if (!hours || date < today || date > maxDate) return false;
     const day = hours[DAY_KEYS[date.getDay()]];
     if (!day || day.isClosed) return false;
-    // Aujourd'hui n'est proposé que si le garage n'a pas encore fermé
-    if (date.getTime() === today.getTime()) {
-      const now = new Date();
-      const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      return nowTime < day.close;
-    }
+    // Aujourd'hui n'est proposé que si le garage n'a pas encore fermé (fin de la dernière plage)
+    if (date.getTime() === today.getTime()) return nowTime() < (lastClose(day) || '00:00');
     return true;
   };
 

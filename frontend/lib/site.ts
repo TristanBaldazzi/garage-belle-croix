@@ -1,6 +1,7 @@
 export const SITE = {
   name: 'Garage de la Belle Croix',
-  url: 'https://www.garagebellecroix.fr',
+  // Adresse officielle (sans www) : les autres variantes y sont redirigées par middleware.ts
+  url: 'https://garagebellecroix.fr',
   phone: '06 09 36 94 90',
   phoneHref: 'tel:+33609369490',
   // Second numéro, affiché en complément du principal

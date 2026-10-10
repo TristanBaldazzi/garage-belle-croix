@@ -134,8 +134,8 @@ router.post('/', authenticate, requireAdmin, async (req, res) => {
 // Update offer (admin only)
 router.put('/:id', authenticate, requireAdmin, async (req, res) => {
   try {
-    // Si une nouvelle image est fournie et qu'il y avait une ancienne, supprimer l'ancienne
-    if (req.body.image && req.body.oldImage) {
+    // Image remplacée ou retirée : supprimer l'ancien fichier
+    if (req.body.oldImage && req.body.image !== req.body.oldImage) {
       const oldImagePath = path.join(__dirname, '../uploads', path.basename(req.body.oldImage));
       if (fs.existsSync(oldImagePath)) {
         fs.unlinkSync(oldImagePath);

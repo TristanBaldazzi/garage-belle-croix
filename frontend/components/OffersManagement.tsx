@@ -91,7 +91,11 @@ export default function OffersManagement() {
   const onSubmit = async (data: OfferForm) => {
     try {
       setIsUploading(true);
-      let imageUrl = editingOffer?.image || '';
+      // Garde l'image actuelle, sauf si elle a été retirée dans le formulaire (aperçu vidé)
+      let imageUrl = imagePreview ? editingOffer?.image || '' : '';
+      if (!imagePreview && editingOffer?.image) {
+        data.oldImage = editingOffer.image;
+      }
 
       // Upload image if a new one is selected
       if (selectedImage) {

@@ -14,10 +14,10 @@ import { ArrowRight, ArrowUpRight, Phone, FileText, Tag, Zap, Gauge, Wrench, Dis
 
 export const metadata: Metadata = pageMetadata({
   path: '/',
-  title: 'Garage de la Belle Croix - Garage automobile à Ennery (Metz-Thionville)',
+  title: 'Garage automobile à Ennery | Garage de la Belle Croix',
   absoluteTitle: true,
   description:
-    'Garage automobile indépendant à Ennery, entre Metz et Thionville : entretien, réparation, freinage, pneus et vidange toutes marques. Devis gratuit, prix annoncé avant d’ouvrir le capot. 06 09 36 94 90.',
+    'Garage auto à Ennery, entre Metz et Thionville : entretien, réparation, pneus et vidange. Devis gratuit, prix annoncé avant intervention.',
   shareTitle: 'Garage de la Belle Croix - La mécanique, sans détour',
 });
 
@@ -162,10 +162,9 @@ export default async function Home() {
 
           <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-4">
             {SERVICES.map(({ Icon, title, text, image, href }, index) => (
-              <Link
+              <article
                 key={title}
-                href={href}
-                className="group flex border border-line bg-white transition-shadow duration-300 hover:shadow-[0_24px_50px_-28px_rgba(11,11,12,0.35)] sm:flex-col"
+                className="group relative flex border border-line bg-white transition-shadow duration-300 hover:shadow-[0_24px_50px_-28px_rgba(11,11,12,0.35)] sm:flex-col"
               >
                 <div className="relative w-28 flex-shrink-0 overflow-hidden bg-stone sm:aspect-[4/3] sm:w-auto">
                   <Image
@@ -181,14 +180,19 @@ export default async function Home() {
                     <Icon className="h-6 w-6 text-brand" strokeWidth={2} />
                     <span className="heading text-lg text-ink/30">{String(index + 1).padStart(2, '0')}</span>
                   </div>
-                  <h3 className="heading mt-3 text-[26px] sm:mt-5 sm:text-[30px]">{title}</h3>
+                  <h3 className="heading mt-3 text-[26px] sm:mt-5 sm:text-[30px]">
+                    {/* Lien étiré sur toute la carte : texte d'ancre court, carte entièrement cliquable */}
+                    <Link href={href} rel="nofollow" className="after:absolute after:inset-0 after:content-['']">
+                      {title}
+                    </Link>
+                  </h3>
                   <p className="mt-2 flex-1 text-[15px] leading-relaxed text-muted">{text}</p>
-                  <span className="link-arrow mt-5">
+                  <span className="link-arrow mt-5" aria-hidden="true">
                     En savoir plus
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </span>
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
         </div>
@@ -214,6 +218,10 @@ export default async function Home() {
 
           <div className="lg:col-span-7">
             <SectionHeading index={3} total={TOTAL_SECTIONS} eyebrow="Pourquoi nous" title="Du travail propre." accent="Et on vous dit tout." />
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+              Au Garage de la Belle Croix, garage automobile indépendant à Ennery, la mécanique se fait sans détour :
+              on vous explique ce qu’on fait, on annonce le prix avant d’intervenir et on tient les délais.
+            </p>
 
             <ol className="mt-12 border-t border-line">
               {REASONS.map((reason, index) => (

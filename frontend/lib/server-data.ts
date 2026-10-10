@@ -22,10 +22,7 @@ export interface OfferCategoryGroup {
 
 export const getOffersByCategory = () => getJson<OfferCategoryGroup[]>('/offers', []);
 
-export interface DayHours {
-  open: string;
-  close: string;
-  isClosed: boolean;
-}
+import type { DayHours } from './hours';
+export type { DayHours };
 
 export const getOpeningHours = () => getJson<Record<string, DayHours> | null>('/opening-hours', null);

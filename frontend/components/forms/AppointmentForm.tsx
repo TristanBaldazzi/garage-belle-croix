@@ -6,7 +6,8 @@ import toast from 'react-hot-toast';
 
 import { appointmentsAPI } from '@/lib/api';
 import { SERVICES, getService } from '@/lib/site';
-import { useOpeningHours, formatShortTime } from '@/lib/useOpeningHours';
+import { useOpeningHours } from '@/lib/useOpeningHours';
+import { formatDaySlots, formatShortTime, getAppointmentSlots, getSlots } from '@/lib/hours';
 import DayCalendar from './DayCalendar';
 import { ChoiceTiles, Field, FormStep, HoneypotField, PrivacyNote, SERVICE_ICONS, SegmentedChoice, SuccessPanel, VehicleTypeToggle, inputClass } from './FormParts';
 
@@ -22,9 +23,6 @@ interface AppointmentFormValues {
   message?: string;
   website?: string;
 }
-
-// Limite entre le créneau du matin et celui de l'après-midi
-const MIDDAY = '12:00';
 
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
 
@@ -58,16 +56,14 @@ export default function AppointmentForm({ initialService }: { initialService?: s
   const slots = (() => {
     if (!selectedDate || !dayHours || dayHours.isClosed) return { matin: true, 'apres-midi': true, reason: '' };
     const now = new Date();
-    const nowTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const isToday = selectedDate === toDateString(now);
-    const morningOpen = dayHours.open < MIDDAY;
-    const matin = morningOpen && (!isToday || nowTime < MIDDAY);
-    const afternoon = dayHours.close > MIDDAY;
+    const { matin, apresMidi, morningOpen, afternoonOpen } = getAppointmentSlots(dayHours, isToday, now);
+    const daySlots = getSlots(dayHours);
     let reason = '';
-    if (!afternoon) reason = `Le garage ferme à ${formatShortTime(dayHours.close)} ce jour-là : créneau du matin uniquement.`;
-    else if (!morningOpen) reason = `Le garage ouvre à ${formatShortTime(dayHours.open)} ce jour-là : créneau de l’après-midi uniquement.`;
+    if (!afternoonOpen) reason = `Le garage ferme à ${formatShortTime(daySlots[daySlots.length - 1].close)} ce jour-là : créneau du matin uniquement.`;
+    else if (!morningOpen) reason = `Le garage ouvre à ${formatShortTime(daySlots[0].open)} ce jour-là : créneau de l’après-midi uniquement.`;
     else if (!matin) reason = 'Il est déjà plus de midi : seul l’après-midi est possible aujourd’hui.';
-    return { matin, 'apres-midi': afternoon, reason };
+    return { matin, 'apres-midi': apresMidi, reason };
   })();
 
   // Bascule automatiquement sur l'autre créneau si celui choisi n'est plus possible
@@ -174,7 +170,7 @@ export default function AppointmentForm({ initialService }: { initialService?: s
           label="Jour"
           required
           error={errors.preferredDate?.message}
-          hint={dayHours && !dayHours.isClosed ? `Horaires ce jour : ${formatShortTime(dayHours.open)} – ${formatShortTime(dayHours.close)}` : 'Réservable jusqu’à 3 mois à l’avance, jours d’ouverture uniquement'}
+          hint={dayHours && !dayHours.isClosed ? `Horaires ce jour : ${formatDaySlots(dayHours)}` : 'Réservable jusqu’à 3 mois à l’avance, jours d’ouverture uniquement'}
         >
           <DayCalendar
             value={selectedDate}
