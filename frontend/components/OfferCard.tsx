@@ -93,7 +93,7 @@ export default function OfferCard({ offer, className = '' }: { offer: Offer; cla
               CATEGORY_LABELS[offer.category] || 'Atelier'
             )}
           </span>
-          <Link href={`/contact?offer=${offer._id}`} rel="nofollow" className="btn-accent h-10 px-5 text-[12px]">
+          <Link href={`/contact#offer=${offer._id}`} className="btn-accent h-10 px-5 text-[12px]">
             J’en profite
             <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
           </Link>

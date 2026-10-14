@@ -10,18 +10,18 @@ import HeroContact, { HeroStatus, RedStripes } from '@/components/HeroContact';
 import { SITE } from '@/lib/site';
 import { pageMetadata } from '@/lib/seo';
 import { getOffersByCategory } from '@/lib/server-data';
-import { ArrowRight, ArrowUpRight, Phone, FileText, Tag, Zap, Gauge, Wrench, Disc, Droplet } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Plus, Phone, FileText, Tag, Zap, Gauge, Wrench, Disc, Droplet } from 'lucide-react';
 
 export const metadata: Metadata = pageMetadata({
   path: '/',
-  title: 'Garage automobile à Ennery | Garage de la Belle Croix',
+  title: 'Mécanique auto à Ennery (57) | Garage de la Belle Croix',
   absoluteTitle: true,
   description:
     'Garage auto à Ennery, entre Metz et Thionville : entretien, réparation, pneus et vidange. Devis gratuit, prix annoncé avant intervention.',
   shareTitle: 'Garage de la Belle Croix - La mécanique, sans détour',
 });
 
-const TOTAL_SECTIONS = 5;
+const TOTAL_SECTIONS = 6;
 
 const PROMISES = [
   { Icon: FileText, title: 'Devis gratuit', text: 'Estimation claire avant toute intervention.' },
@@ -35,28 +35,28 @@ const SERVICES = [
     title: 'Entretien',
     text: 'Révision constructeur, niveaux, filtres, courroie. Carnet tamponné, garantie préservée.',
     image: '/images/service-entretien.jpg',
-    href: '/rendez-vous?service=entretien-auto',
+    href: '/rendez-vous#service=entretien-auto',
   },
   {
     Icon: Wrench,
     title: 'Réparation',
     text: 'Freinage, embrayage, distribution, diagnostic électronique. On trouve, on explique, on répare.',
     image: '/images/service-reparation.jpg',
-    href: '/devis?service=reparation-auto',
+    href: '/devis#service=reparation-auto',
   },
   {
     Icon: Disc,
     title: 'Pneus',
     text: 'Montage, équilibrage, géométrie. Été, hiver ou 4 saisons, toutes marques.',
     image: '/images/service-pneus.jpg',
-    href: '/devis?service=pneus',
+    href: '/devis#service=pneus',
   },
   {
     Icon: Droplet,
     title: 'Vidange',
     text: 'Huile adaptée à votre moteur, filtre neuf, indicateur remis à zéro. Rapide et propre.',
     image: '/images/service-vidange.jpg',
-    href: '/rendez-vous?service=entretien-auto',
+    href: '/rendez-vous#service=entretien-auto',
   },
 ];
 
@@ -72,6 +72,39 @@ const REASONS = [
   {
     title: 'Service rapide',
     text: 'Prise en charge rapide, véhicule rendu à l’heure dite. On vous prévient dès qu’il est prêt.',
+  },
+];
+
+const FAQ = [
+  {
+    question: 'Quelles marques de voitures entretenez-vous ?',
+    answer:
+      'Toutes les marques de véhicules légers, françaises comme étrangères : citadines, berlines, SUV ou utilitaires. L’atelier est équipé pour le diagnostic électronique, ce qui permet de lire les codes défaut et de trouver la vraie cause d’une panne avant de changer la moindre pièce.',
+  },
+  {
+    question: 'Faire l’entretien chez un garage indépendant fait-il perdre la garantie constructeur ?',
+    answer:
+      'Non. La révision suit le programme prévu par le constructeur pour votre modèle, avec des pièces et des huiles de qualité équivalente, et votre carnet d’entretien est tamponné. Votre garantie reste valable, comme le prévoit la réglementation européenne.',
+  },
+  {
+    question: 'Le devis est-il vraiment gratuit ?',
+    answer:
+      'Oui, il est gratuit et sans engagement. Il détaille chaque pièce et la main-d’œuvre, pour que vous sachiez exactement ce que vous payez. Si on découvre autre chose en cours d’intervention, on vous appelle avant de toucher à quoi que ce soit.',
+  },
+  {
+    question: 'Puis-je apporter mes propres pneus ?',
+    answer:
+      'Oui. On monte les pneus que vous avez achetés de votre côté, avec équilibrage. On peut aussi vous fournir des pneus neufs été, hiver ou 4 saisons, et contrôler la géométrie pour éviter une usure irrégulière.',
+  },
+  {
+    question: 'Vous occupez-vous aussi des motos ?',
+    answer:
+      'Oui, l’atelier prend en charge l’entretien et la mécanique moto, toutes marques : vidange, révision, freinage, transmission ou recherche de panne.',
+  },
+  {
+    question: 'Comment prendre rendez-vous ?',
+    answer:
+      'Le plus simple est d’appeler le garage. Vous pouvez aussi choisir un créneau en ligne ou nous envoyer une demande de devis : on vous recontacte rapidement pour confirmer. Le garage se trouve dans la zone d’activités d’Ennery, à quelques minutes de Metz, Thionville, Maizières-lès-Metz et Hagondange, avec un parking devant l’atelier.',
   },
 ];
 
@@ -182,7 +215,7 @@ export default async function Home() {
                   </div>
                   <h3 className="heading mt-3 text-[26px] sm:mt-5 sm:text-[30px]">
                     {/* Lien étiré sur toute la carte : texte d'ancre court, carte entièrement cliquable */}
-                    <Link href={href} rel="nofollow" className="after:absolute after:inset-0 after:content-['']">
+                    <Link href={href} className="after:absolute after:inset-0 after:content-['']">
                       {title}
                     </Link>
                   </h3>
@@ -272,7 +305,39 @@ export default async function Home() {
         </div>
       </section>
 
-      <LocationMap index={5} total={TOTAL_SECTIONS} />
+      {/* Questions fréquentes */}
+      <section id="faq" className="scroll-mt-24 bg-stone py-20 md:py-28">
+        <div className="container-site grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-20">
+          <div className="lg:col-span-4">
+            <SectionHeading index={5} total={TOTAL_SECTIONS} eyebrow="Questions fréquentes" title="Vos questions," accent="nos réponses." />
+            <p className="mt-6 text-[15px] leading-relaxed text-muted">
+              Une autre question ? Appelez le garage au{' '}
+              <a href={SITE.phoneHref} className="font-semibold text-ink underline-offset-4 hover:underline">
+                {SITE.phone}
+              </a>{' '}
+              ou{' '}
+              <Link href="/rendez-vous" className="font-semibold text-ink underline-offset-4 hover:underline">
+                réservez un créneau en ligne
+              </Link>
+              .
+            </p>
+          </div>
+
+          <div className="border-t border-line lg:col-span-8">
+            {FAQ.map(({ question, answer }) => (
+              <details key={question} className="group border-b border-line">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-6 [&::-webkit-details-marker]:hidden">
+                  <h3 className="heading text-[22px] md:text-[26px]">{question}</h3>
+                  <Plus className="h-5 w-5 flex-shrink-0 text-brand transition-transform group-open:rotate-45" strokeWidth={2.25} />
+                </summary>
+                <p className="max-w-2xl pb-7 text-[15px] leading-relaxed text-muted">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <LocationMap index={6} total={TOTAL_SECTIONS} />
 
       <Footer />
     </div>

@@ -3,6 +3,24 @@ const nextConfig = {
   reactStrictMode: true,
   // Ne pas annoncer la techno du serveur (en-tête X-Powered-By)
   poweredByHeader: false,
+  // En-têtes de sécurité sur toutes les réponses
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          // Navigateur forcé en HTTPS pendant 1 an
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          // Pas de devinette du type de fichier
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          // Anti-clickjacking : le site ne peut pas être affiché dans une iframe externe
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -1,14 +1,15 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useLinkParam } from '@/lib/useLinkParam';
 import RequestPageShell from '@/components/RequestPageShell';
 import QuoteForm from '@/components/forms/QuoteForm';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 function QuoteFormWithParams() {
-  const searchParams = useSearchParams();
-  return <QuoteForm initialService={searchParams.get('service')} />;
+  const service = useLinkParam('service');
+  // key : le formulaire repart de zéro une fois le service lu dans l'ancre (après hydratation)
+  return <QuoteForm key={service ?? ''} initialService={service} />;
 }
 
 export default function DevisPage() {

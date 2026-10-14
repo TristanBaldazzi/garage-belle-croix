@@ -22,7 +22,7 @@ const DEFAULT_DESCRIPTION =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: 'Garage automobile à Ennery | Garage de la Belle Croix',
+    default: 'Mécanique auto à Ennery (57) | Garage de la Belle Croix',
     template: '%s | Garage de la Belle Croix',
   },
   description: DEFAULT_DESCRIPTION,

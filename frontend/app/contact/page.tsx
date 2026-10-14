@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useLinkParam } from '@/lib/useLinkParam';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { ArrowRight } from 'lucide-react';
@@ -25,8 +25,7 @@ interface ContactForm {
 }
 
 function ContactFormContent() {
-  const searchParams = useSearchParams();
-  const offerId = searchParams.get('offer');
+  const offerId = useLinkParam('offer');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [offer, setOffer] = useState<any>(null);
